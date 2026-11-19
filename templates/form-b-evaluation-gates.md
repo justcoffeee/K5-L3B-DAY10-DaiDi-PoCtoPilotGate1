@@ -325,10 +325,12 @@ Mỗi con số kèm một câu lý do, lấy từ `data/world.json` → `ops_lim
 
 | Khoá | Giá trị bàn đặt | Lý do (một câu, có số) |
 |---|---|---|
-| `business.daily_refund_cap_vnd` | | |
-| `business.cost_budget_per_ticket_vnd` | | |
-| `business.pilot_scope` (all / warehouse / percent) | | |
-| `business.roi_min` | | |
+| `business.daily_refund_cap_vnd` | `2000000` VNĐ/ngày | Đặt bằng ngân sách Finance `ops_limits.daily_auto_refund_budget_vnd = 2.000.000` VNĐ/ngày để khoản hoàn tự động làm vượt tổng trần phải chuyển người trước khi ghi tiền. |
+| `business.cost_budget_per_ticket_vnd` | `1500` VNĐ/ticket (tiền máy) | Đặt bằng `ops_limits.max_llm_cost_per_ticket_vnd = 1.500` VNĐ/ticket để giới hạn tiền máy; đây là ngân sách riêng cho LLM, khác tổng chi phí gồm công duyệt và phí trực được tính từ `ops_facts`. |
+| `business.pilot_scope` (all / warehouse / percent) | `{"mode":"all","warehouses":[],"percent":100}` | Giữ phạm vi đánh giá 100% bộ nền 22 ticket để kiểm tra cổng trên mọi kho, dựa trên công suất danh nghĩa `ops_facts`: 1 người × 6 ca/giờ × (480/60) giờ = 48 ca/ca trực, đồng thời phải kiểm tra lại lịch tới và SLA 60 phút vì công suất tổng không bảo đảm không ùn. |
+| `business.roi_min` | `1.0` (100%) | Với chi phí làm tay `ops_facts.manual_cost_per_ticket_vnd = 10.000` VNĐ, ROI = (chi phí làm tay − tổng chi phí trợ lý)/tổng chi phí trợ lý ≥ 1,0 yêu cầu tổng chi phí ≤ 5.000 VNĐ/ticket, khớp mức bàn đã ký. |
+
+**Phạm vi áp dụng:** cấu hình `all` là phạm vi để Huy đo cổng vòng 1, chưa phải quyết định cho phép mở pilot thật; giữ cả phân khúc HCM/VNX để xác minh lỗi đã được sửa, không loại ca khó để làm đẹp tỷ lệ. Nếu report còn lỗi an toàn hoặc vượt trần thì chưa chọn Tiếp tục. Huy chạy đánh giá trên máy Huy với cấu hình này và cung cấp report để bàn chốt phạm vi thực tế ở B8; không chạy eval trên máy thành viên khác, không sửa `config/acceptance_criteria.json`. ROI 1,0 là ngưỡng bàn chọn từ mốc so sánh làm tay, không phải giá trị sẵn có trong `ops_facts`; phép tính 48 ca là công suất danh nghĩa, chưa trừ tải công việc khác hoặc xét giờ cao điểm.
 
 ### B7.5 · Câu 2.10 · Cổng con người, vận hành, pháp lý + Runbook phần 1–3
 

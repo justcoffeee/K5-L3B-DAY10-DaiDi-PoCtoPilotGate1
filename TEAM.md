@@ -28,11 +28,11 @@ Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi ti�
 
 ### Phần việc phụ trách
 
-Sản phẩm và kinh doanh; câu 2.3, Phiếu B mục B3: bản đồ dữ liệu và ví dụ drift chính sách REFUND-v3 → v4 từ 2026-12-01.
+Sản phẩm và kinh doanh; câu 2.3, Phiếu B mục B3: bản đồ dữ liệu và ví dụ drift chính sách REFUND-v3 → v4 từ 2026-12-01; câu 2.9, mục B7.4 và nhóm `business` trong `config/operating_gates.json`.
 
 ### Đóng góp cụ thể
 
-Điền bản đồ nguồn dữ liệu, trường quyết định tiền/lỗi hãng, nguồn sự thật và điểm lệch; phân tích thay đổi hạn mức tự động và quy tắc FORCE_MAJEURE, chỉ số chịu ảnh hưởng và cách phát hiện đề xuất. Có dùng Codex hỗ trợ đọc code/dữ liệu và soạn, soát câu chữ theo `RULES.md`. Không chạy eval; mọi lần chạy thực hiện trên máy Huy. Không sửa tiêu chí đã ký.
+Điền bản đồ nguồn dữ liệu, trường quyết định tiền/lỗi hãng, nguồn sự thật và điểm lệch; phân tích thay đổi hạn mức tự động và quy tắc FORCE_MAJEURE, chỉ số chịu ảnh hưởng và cách phát hiện đề xuất. Sau khi đồng bộ phần Hùng đã push, đặt bốn cổng kinh doanh và giải thích từng giá trị từ `ops_limits`/`ops_facts`; giữ nguyên `operations` và `legal` của Hùng. Có dùng Codex hỗ trợ đọc code/dữ liệu và soạn, soát câu chữ theo `RULES.md`. Không chạy eval; mọi lần chạy thực hiện trên máy Huy. Không sửa tiêu chí đã ký.
 
 ### Bằng chứng
 
