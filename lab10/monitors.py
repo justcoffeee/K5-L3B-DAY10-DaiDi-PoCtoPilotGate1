@@ -19,7 +19,26 @@ def escalation_rate(trials):
     return sum(t["status"] == "escalated" for t in trials) / max(1, len(trials))
 
 
+def llm_fallback_rate(trials):
+    """Tỉ lệ ticket mà trợ lý phải chạy tiếp khi LLM không trả lời (sự kiện llm_fallback).
+    Không cần nhãn: tăng vọt nghĩa là nhà cung cấp LLM đang nghẽn, quyết định đang dựa vào đường dự phòng."""
+    return sum(any(e.get("type") == "llm_fallback" for e in t["events"]) for t in trials) / max(1, len(trials))
+
+
+def peak_hour_review_load(trials):
+    """Số ca vào hàng chờ người duyệt trong giờ đông nhất (theo arrive_min), lấy mức cao nhất qua các ngày/seed.
+    So với công suất một người duyệt (6 ca/giờ) để biết lúc nào phải gọi thêm người."""
+    buckets = {}
+    for t in trials:
+        if t.get("review_kind") and t.get("arrive_min") is not None:
+            key = (t.get("seed"), t.get("day"), int(t["arrive_min"]) // 60)
+            buckets[key] = buckets.get(key, 0) + 1
+    return max(buckets.values(), default=0)
+
+
 MONITORS = {
     "escalation_rate": escalation_rate,     # có sẵn; KHÔNG tính là metric mới của đội
+    "llm_fallback_rate": llm_fallback_rate,
+    "peak_hour_review_load": peak_hour_review_load,
 }
 STARTER_MONITORS = ("escalation_rate",)

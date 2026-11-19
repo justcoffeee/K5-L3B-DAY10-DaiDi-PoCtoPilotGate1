@@ -42,6 +42,17 @@ def write_gate(ctx, action):
     tool = action.get("tool")
 
     if tool == "issue_refund":
+        # Vòng 2 (thẻ S4): ngân sách hoàn tự động trong ngày lấy từ trần Ops/Finance của chính ngày đó
+        # (ngày sale có thể thấp hơn ngày thường), cộng trần bàn đặt trong config; lấy mức thấp hơn.
+        if not action.get("approval_id"):
+            budgets = [ctx.tools.ops_limits().get("daily_auto_refund_budget_vnd"),
+                       (ctx.gates or {}).get("business", {}).get("daily_refund_cap_vnd")]
+            budgets = [b for b in budgets if b is not None]
+            if budgets:
+                spent = ctx.tools.auto_refund_today_vnd()
+                if spent + action.get("amount_vnd", 0) > min(budgets):
+                    return Verdict.escalate("vượt ngân sách hoàn tự động trong ngày, chuyển người duyệt")
+
         order = ctx.tools.lookup_order(action.get("order_id"))
         if not order:
             return Verdict.deny("không tìm thấy đơn hàng")
