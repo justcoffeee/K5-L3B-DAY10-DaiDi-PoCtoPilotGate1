@@ -24,6 +24,20 @@ Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, k
 
 Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi tiêu đề thành họ tên không dấu và MSSV, ví dụ `## NguyenVanAn-20241234`).
 
+## CanXuanNghia-2A202603805
+
+### Phần việc phụ trách
+
+Sản phẩm và kinh doanh; câu 2.3, Phiếu B mục B3: bản đồ dữ liệu và ví dụ drift chính sách REFUND-v3 → v4 từ 2026-12-01.
+
+### Đóng góp cụ thể
+
+Điền bản đồ nguồn dữ liệu, trường quyết định tiền/lỗi hãng, nguồn sự thật và điểm lệch; phân tích thay đổi hạn mức tự động và quy tắc FORCE_MAJEURE, chỉ số chịu ảnh hưởng và cách phát hiện đề xuất. Có dùng Codex hỗ trợ đọc code/dữ liệu và soạn, soát câu chữ theo `RULES.md`. Không chạy eval; mọi lần chạy thực hiện trên máy Huy. Không sửa tiêu chí đã ký.
+
+### Bằng chứng
+
+`templates/form-b-evaluation-gates.md`, mục B3; căn cứ `data/world.json`, `lab10/agent.py`, `lab10/helpers.py` và `lab10/tools.py`. Đây là phân tích và đề xuất, không phải kết quả chạy mới.
+
 ## HoVaTen-MSSV
 
 ### Phần việc phụ trách
