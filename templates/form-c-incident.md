@@ -363,23 +363,27 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 
 <a id="c9"></a>
 
-## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `__________`)
+## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `R-S4-after-20261119-171317-3de02d`)
 
 Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [gate … hỏng]` và ghi:
 
 ```
-[ĐỈNH] ______________________________
+[ĐỈNH] Tác hại: Thiệt hại tài chính, tổn hại đối tác vận chuyển và vỡ SLA vận hành đêm 11.11
  └─ HOẶC
- ├─ [1] ______________ VÀ [gate ______ hỏng]
- ├─ [2] ______________ VÀ [gate ______ hỏng]
- └─ [3] ______________ (còn hở?)
+ ├─ [1] Duyệt sai khi LLM nghẽn VÀ [gate write_gate đối chiếu DB & chính sách hỏng]
+ │      (ngăn hẳn: cổng write_gate tính lại quyền lợi từ DB tracking H.entitlement_vnd và H.carrier_at_fault, không phụ thuộc LLM)
+ ├─ [2] Hoàn vượt ngân sách ngày sale VÀ [gate ngân sách ngày tự động ops_limits hỏng]
+ │      (ngăn hẳn: cổng so khớp min(daily_refund_cap_vnd, daily_auto_refund_budget_vnd), vượt thì chuyển người duyệt)
+ └─ [3] Hàng chờ quá SLA VÀ [tải thực tế vượt quá 12 ca/giờ của 2 người trực]
+        (giảm khả năng: 2 người trực 12 ca/giờ giải quyết dứt điểm 0 ca ùn, chờ max 15 phút trên S4.
+         TUY NHIÊN: sinh rủi ro mới về ROI và chi phí khi thêm 30.000đ phí trực làm ROI bộ nền tụt từ 1.34 xuống 0.72 < 1.0 đã ký)
 ```
 
 | Nhánh | Gate (hàm trong `guards.py` / khoá config / metric trong `monitors.py`) | Tầng gate (phát hiện / chặn / giới hạn thiệt hại / vận hành) | Giảm hay ngăn? Vì sao | Nhánh còn hở |
 |---|---|---|---|---|
-| [1] | | | | |
-| [2] | | | | |
-| [3] | | | | |
+| [1] | `guards.write_gate` (nhánh `issue_refund` tính `H.entitlement_vnd` & nhánh `file_carrier_fault` kiểm `H.carrier_at_fault`) kèm metric `monitors.llm_fallback_rate` | Chặn + Phát hiện | **Ngăn**: Cổng độc lập tính toán quyền lợi hoàn tiền và lỗi hãng hoàn toàn dựa trên nguồn sự thật Database và chính sách hiệu lực, vô hiệu hóa hoàn toàn cơ chế `fail_open` sai trái của LLM. | Chỉ còn hở nếu chính dữ liệu Database tracking bị ghi sai lệch ngay từ nguồn (Data corruption). |
+| [2] | `guards.write_gate` (nhánh `issue_refund` kiểm tra `auto_refund_today_vnd + amount_vnd > min(budgets)`) | Chặn + Giới hạn thiệt hại | **Ngăn**: Cổng đọc trực tiếp trần ngày sale trong `ctx.tools.ops_limits()["daily_auto_refund_budget_vnd"]` (300k) và tự động `Verdict.escalate` toàn bộ các khoản phát sinh vượt trần. | Chỉ còn hở nếu người duyệt tay (con người) duyệt nhầm hoặc duyệt vượt ngân sách ở bước thẩm định thủ công. |
+| [3] | `config/operating_gates.json` (`operations.reviewers_on_shift = 2`, `review_capacity_per_hour = 12`) kèm metric `monitors.peak_hour_review_load` | Vận hành + Giám sát | **Giảm**: Nâng gấp đôi công suất lên 12 ca/giờ giúp xóa sạch 5 ca ùn, hạ thời gian chờ tối đa từ 82 phút xuống 15 phút.<br>**Rủi ro mới phát sinh:** Tăng người trực làm phát sinh thêm 30.000đ chi phí trực/ca, làm ROI ngày thường trên bộ nền giảm từ 1.34 xuống 0.72 (thấp hơn ngưỡng 1.0 đã ký ở Bản tiêu chí). | Còn hở nếu lượng ticket dồn vào giờ cao điểm vượt quá 12 ca/giờ; hoặc rủi ro tài chính do lãng phí chi phí trực trong những ngày thường lượng ticket thấp. |
 
 ---
 
