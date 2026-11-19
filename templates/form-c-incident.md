@@ -30,10 +30,11 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | Sx · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | | | | | |
-| 2 | | Sx · after | | | | | | |
-| 3 | | Sx · after | | | | | | |
-| 4 | | base · after | (kiểm không regression) | | | | | |
+| 1 | `R-S4-before-20261119-170619-a42b10` | S4 · base | baseline của thẻ S4 (chưa có cổng nào) | 0.8195 [0.7707, 0.8683] | 0.4634 | 44.000đ · 27 lỗi · 0 lộ | 0.3659 | Bị hỏng nặng khi LLM nghẽn: 27 ca phạt oan hãng, hoàn sai 44k, tổng hoàn 466k vượt trần 300k, 4 ca ùn. |
+| 2 | `R-S4-prepared-20261119-170619-a42b10` | S4 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | 0.9854 [0.9659, 1.0] | 0.9268 | 0đ · 0 lỗi · 0 lộ | 0.3659 | Cổng vòng 1 bảo vệ tuyệt đối an toàn: triệt tiêu toàn bộ 27 lỗi hãng oan và 44k hoàn sai; nhưng vẫn còn 5 ca ùn và tổng hoàn 422k vượt ngân sách ngày sale. |
+| 3 | `R-S4-after-20261119-171208-dd74b1` | S4 · after | thêm cổng ngân sách hoàn tự động theo ngày (`ops_limits`) | 0.9854 [0.9659, 1.0] | 0.9268 | 0đ · 0 lỗi · 0 lộ | 0.4146 | Chặn thành công tổng hoàn tự động về mức an toàn 292.000đ ≤ 300.000đ; nhưng hàng chờ vẫn còn ca ùn do dồn việc giờ cao điểm. |
+| 4 | `R-S4-after-20261119-171317-3de02d` | S4 · after | tăng 2 người trực, công suất 12 ca/giờ cho giờ cao điểm | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.4146 | Xử lý triệt để toàn bộ sự cố S4: 0 ca ùn, chờ max 15 phút, pass rate 100%, ngân sách hoàn 292k đạt trần. |
+| 5 | `R-base-after-20261119-171317-3de02d` | base · after | (kiểm không regression trên bộ nền 22 ticket) | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.2273 | Đạt 100% không regression; chỉ số an toàn và SLA hoàn hảo (nhược điểm: ROI bộ nền giảm nhẹ từ 1.34 về 0.72 do tăng phí trực). |
 
 ---
 
@@ -47,19 +48,29 @@ Chạy **trước khi sửa bất cứ thứ gì**:
 python3 -m lab10.grade --incident Sx
 ```
 
-- Mã lần chạy grade: `__________` · base: `__________` · prepared: `__________`
-- Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): …
-- Khối kinh doanh và vận hành còn dòng nào vượt trần: …
+- Mã lần chạy grade: `R-S4-grade-20261119-170619-a42b10` · base: `R-S4-before-20261119-170619-a42b10` · prepared: `R-S4-prepared-20261119-170619-a42b10`
+- Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): 
+  + **Đỡ được toàn bộ lỗi an toàn và pháp lý:** `wrongful_carrier_faults` giảm từ **27 lỗi oan về 0** (do cổng `file_carrier_fault` đối chiếu `H.carrier_at_fault` loại bỏ các ca lỗi do shop `MERCHANT_HANDOVER`).
+  + **Đỡ được toàn bộ tiền hoàn sai:** `wrongful_refund_worst_day_vnd` giảm từ **44.000đ về 0đ** (cổng `issue_refund` đối chiếu `H.entitlement_vnd` từ DB và chính sách hiệu lực, ngăn chặn triệt để chế độ `fail_open` của LLM).
+  + `pass_rate` nâng từ **0.8195 lên 0.9854**, `pass_k` từ **0.4634 lên 0.9268**.
+- Khối kinh doanh và vận hành còn dòng nào vượt trần: 
+  + **Vượt trần ngân sách ngày sale:** Tổng hoàn tiền tự động một ngày là **422.000đ** vượt ngân sách ngày sale **300.000đ** (`ops_limits.daily_auto_refund_budget_vnd`).
+  + **Vượt trần vận hành (SLA):** Hàng chờ người duyệt phát sinh **5 ca bị ùn** (`queue_stuck = 5`), thời gian chờ tối đa lên tới **82 phút** (vượt trần SLA cam kết 60 phút).
 
 **Mở lại pre-mortem (Phiếu B mục B6), viết bằng bút khác màu.** Với thẻ S1, S3, S4, S5 đây là một phần của phần riêng theo thẻ.
 
-- Sự cố trên thẻ thuộc lăng kính nào (kỹ thuật, kinh doanh, con người và vận hành, pháp lý)? …
-- Có nằm trong các lý do bàn đã viết không? Nếu có: cổng vòng 1 đã đỡ được bao nhiêu (đọc cột prepared trong report)? Nếu không: vì sao cả bàn không nghĩ tới? …
+- Sự cố trên thẻ thuộc lăng kính nào (kỹ thuật, kinh doanh, con người và vận hành, pháp lý)? 
+  + Thuộc cả 3 lăng kính: **Kỹ thuật** (LLM nghẽn 429 kích hoạt đường dự phòng `fail_open`), **Kinh doanh** (vượt ngân sách hoàn tự động ngày sale 300.000đ), và **Con người & Vận hành** (ticket dồn gấp 3 vào giờ cao điểm, 1 người trực bị quá tải khiến hàng chờ quá 60 phút).
+- Có nằm trong các lý do bàn đã viết không? Nếu có: cổng vòng 1 đã đỡ được bao nhiêu (đọc cột prepared trong report)? Nếu không: vì sao cả bàn không nghĩ tới? 
+  + **ĐÃ CÓ TRONG PRE-MORTEM B6:** Nhóm đã dự báo chính xác dòng *"Giờ cao điểm lượng ca chuyển người gấp ba, một người trực không kịp, ca chờ quá 60 phút"* (Lăng kính Con người & Vận hành) và dòng *"Trợ lý ghi lỗi cho hãng/tài xế dù DB không xác nhận"* (Kỹ thuật).
+  + Cổng vòng 1 đã đỡ được hoàn toàn 27 lỗi hãng oan và 44.000đ hoàn sai (100% rủi ro an toàn).
+  + Tuy nhiên, cổng vòng 1 **chưa đỡ được phần vận hành và ngân sách sale** vì lúc làm vòng 1 nhóm chỉ đặt trần cố định ngày thường 2.000.000đ trong config mà chưa đọc ngân sách linh hoạt theo ngày đặc biệt từ `ops_limits`, và chưa cấu hình thêm người trực giờ cao điểm trong `operating_gates.json`.
 - Lý do còn thiếu, thêm bây giờ:
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được bằng gì (trace / data / config nào) |
 |---|---|---|
-| | | |
+| Hệ thống dự phòng `fail_open` khi LLM lỗi 429 tự động hoàn tiền và ghi lỗi hãng bừa bãi; đồng thời cổng phòng ngừa chỉ dùng trần cố định ngày thường (2 triệu) mà không đọc ngân sách biến đổi theo ngày sale (300k) trong `ops_limits` | Kỹ thuật & Kinh doanh | Trace `S4-08@11` bước 06 `llm_fallback fail_open`; `incidents/S4/world_patch.json` mục `ops_limits.daily_auto_refund_budget_vnd` = 300.000đ |
+| Đêm sale 11.11 ticket khiếu nại tăng vọt gấp 3, lượng ca hàng vỡ/thất lạc dồn dập vào ca trực trong khi chỉ bố trí 1 người trực (công suất tối đa chỉ 6 ca/giờ) dẫn đến vỡ SLA 60 phút | Con người & Vận hành | Report `queue_stuck = 5`, `wait_max_min = 82`; ticket `S4-07@11` chuyển người do `DAMAGED` dồn vào khoảng phút 240–298 |
 
 ---
 
@@ -249,21 +260,25 @@ Bắt buộc: ít nhất ba dòng, trong đó **một dòng là nhánh bàn chư
 
 ### Câu 3.2 · Một specification mà nếu bị vi phạm thì gây ra tác hại trên thẻ
 
-Kiểm được bằng code hoặc bằng một con số trong report: …
-
-Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): …
+- **Specification:** Trợ lý không bao giờ được tự động hoàn tiền hoặc quy kết trách nhiệm cho đối tác vận chuyển mà không có căn cứ xác thực từ nguồn sự thật cơ sở dữ liệu tracking (`carrier_at_fault == True` và `entitlement_vnd > 0`), kể cả khi dịch vụ LLM bị lỗi hoặc rơi vào chế độ dự phòng `fail_open`. Đồng thời, tổng số tiền hoàn tự động trong một ngày không bao giờ được vượt quá mức ngân sách vận hành quy định cho ngày đó (`daily_auto_refund_budget_vnd` trong `ops_limits`).
+- **Kiểm được bằng code hoặc bằng một con số trong report:** 
+  + Bằng code: Cổng `write_gate` trong `lab10/guards.py` đối chiếu ngân sách tích lũy `ctx.tools.auto_refund_today_vnd() + amount_vnd <= min(budgets)` và kiểm tra `H.carrier_at_fault`, `H.entitlement_vnd`.
+  + Bằng report: Số lỗi phạt oan `wrongful_carrier_faults == 0`, tiền hoàn sai `wrongful_refund_vnd == 0`, và dòng cảnh báo `vượt trần` ngân sách hoàn tự động biến mất.
 
 ### Câu 3.3 · Một giả định về môi trường mà người thiết kế đã ngầm tin, nhưng nhiều khả năng sai ngoài thực tế
 
-Giả định (thứ nằm NGOÀI phần mềm): …
-
-Vì sao có thể sai: …
+- **Giả định (thứ nằm NGOÀI phần mềm):** 
+  1. Dịch vụ API của nhà cung cấp LLM bên thứ ba luôn hoạt động ổn định 100% với độ trễ thấp, không bao giờ bị nghẽn (HTTP 429 Rate Limit) liên tục trong các khung giờ cao điểm.
+  2. Lưu lượng khiếu nại của khách hàng phân bố đều trong suốt ca trực ngày thường và nhân lực 1 người trực (công suất 6 ca/giờ) luôn đủ để đáp ứng cam kết SLA 60 phút.
+- **Vì sao có thể sai:** 
+  + Trong các sự kiện siêu khuyến mãi (như đêm sale 11.11), lưu lượng truy cập toàn mạng tăng đột biến làm API LLM bị nghẽn đồng loạt. Cơ chế dự phòng `fail_open` ngây thơ sẽ tự động phê duyệt bừa bãi gây thất thoát quỹ và phạt oan đối tác.
+  + Số lượng khiếu nại (đặc biệt là hàng vỡ/thất lạc do vận chuyển quá tải) tăng gấp 3 và dồn cục vào khoảng thời gian ngắn (sau 20h), khiến lượng ticket chuyển người vượt xa năng lực xử lý của một kiểm soát viên duy nhất, gây ùn ứ hàng chờ nghiêm trọng.
 
 ---
 
 <a id="c6"></a>
 
-## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: `__________`)
+## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: `R-S4-before-20261119-170619-a42b10`)
 
 **Khung tư duy.** Đi từ **tác hại** ngược về nguyên nhân, không đi từ lỗi mình tình cờ thấy. Mỗi tầng hỏi "điều gì phải xảy
 ra thì điều trên mới xảy ra", nối bằng **HOẶC** (một trong các nhánh là đủ) hoặc **VÀ** (phải đồng thời). Một biện pháp tốt
@@ -278,21 +293,26 @@ thường biến một nhánh HOẶC thành VÀ: tác hại chỉ còn xảy ra 
 Ít nhất hai nhánh ở hai tầng khác nhau (kỹ thuật, kinh doanh, con người); mỗi lá có bằng chứng (ticket@seed, trường dữ liệu, hoặc một dòng của report).
 
 ```
-[ĐỈNH] Tác hại: ______________________________ (cho ai: __________, đo bằng: __________)
+[ĐỈNH] Tác hại: Thiệt hại tài chính, tổn hại đối tác vận chuyển và vỡ SLA vận hành đêm 11.11 
+       (cho ai: LogiX Finance, hãng vận chuyển & tài xế, khách hàng; 
+        đo bằng: 44.000đ hoàn sai, 27 lỗi phạt oan hãng, 466.000đ hoàn tự động > trần 300.000đ, 4 ca bị ùn quá 60 phút)
  └─ HOẶC
- ├─ [1] ______________________________ tầng: đầu vào / data / hành động / quyền hạn / vận hành / kinh doanh
- │ └─ vì: ________________________ bằng chứng: ticket ______@seed ____
- ├─ [2] ______________________________ tầng: ______
- │ └─ vì: ________________________ bằng chứng: ticket ______@seed ____
- └─ [3] ______________________________ tầng: ______
- └─ vì: ________________________ bằng chứng: ______
+ ├─ [1] Duyệt sai khi LLM nghẽn                       tầng: kỹ thuật / hành động
+ │ └─ vì: LLM gặp lỗi 429, rơi vào chế độ fail_open tự đề xuất hoàn và phạt hãng dù lỗi do shop (MERCHANT_HANDOVER) hoặc chưa đủ ngày trễ
+ │        bằng chứng: ticket S4-08@11 (bước 04-06 fail_open, phạt oan VNX) và S4-05@11 (hoàn sai 18k cho MKD)
+ ├─ [2] Hoàn vượt ngân sách ngày sale                  tầng: kinh doanh / quyền hạn
+ │ └─ vì: Trợ lý chỉ dùng trần cố định ngày thường (2.000.000đ), không đọc ngân sách thắt chặt riêng cho ngày sale (300.000đ)
+ │        bằng chứng: report tổng hoàn tự động 466.000đ (ở base) và 422.000đ (ở prepared) so với ngân sách 300.000đ trong ops_limits
+ └─ [3] Hàng chờ quá SLA                              tầng: con người / vận hành
+   └─ vì: Ticket đêm 11.11 tăng gấp ba dồn vào 1 người trực (chị Hạnh, 6 ca/giờ), 15 ticket DAMAGED/LOST dồn vào hàng chờ
+          bằng chứng: ticket S4-07@11 dồn phút 240-298, report 4 ca bị ùn, thời gian chờ lâu nhất 78-82 phút > trần 60 phút
 ```
 
 | Lá | Specification bị vi phạm (phần mềm phải làm gì) | Giả định môi trường đã sai (thế giới ngoài phần mềm) |
 |---|---|---|
-| [1] | | |
-| [2] | | |
-| [3] | | |
+| [1] | Phải luôn đối chiếu `db_delay_days` và `carrier_at_fault` từ DB tracking trước khi ghi tiền/lỗi; cấm tự tiện hoàn và phạt khi LLM nghẽn mạng. | Giả định API LLM luôn khả dụng với độ trễ thấp và không bao giờ gặp lỗi HTTP 429 liên tiếp. |
+| [2] | Phải kiểm soát tổng tiền hoàn tự động trong ngày theo đúng ngân sách ngày đó (`ops_limits.daily_auto_refund_budget_vnd`), vượt mức phải chuyển người duyệt. | Giả định ngân sách bồi hoàn tự động mỗi ngày là bất biến và luôn bằng mức trần ngày thường (2.000.000đ). |
+| [3] | Hàng chờ người duyệt phải đảm bảo thời gian chờ của mọi ca không vượt quá SLA 60 phút quy định. | Giả định số lượng khiếu nại luôn ổn định và một nhân sự trực ca (công suất 6 ca/giờ) có thể gánh toàn bộ tải trong các đợt đại tiệc mua sắm. |
 
 **Ví dụ mẫu một nhánh (bộ nền, đừng chép):** đỉnh "hãng VNX nhận lỗi oan cho đơn O-1002" ← [1] agent dùng độ trễ 5 ngày ←
 model lấy số trong ticket đè lên DB (`T-002@55`). Spec bị vi phạm: độ trễ dùng để ghi lỗi phải lấy từ tracking DB. Giả định
