@@ -53,14 +53,14 @@ Kỹ sư cổng (vòng 1 & hỗ trợ vòng 2):
 - Triển khai thành công 3 cổng bảo vệ code cứng trong `lab10/guards.py` đối chiếu nguồn sự thật Database và chính sách hiệu lực: chặn đứng hoàn sai tiền quỹ, triệt tiêu 100% rủi ro phạt oan hãng vận chuyển (loại bỏ lỗi do shop `MERCHANT_HANDOVER`), và làm sạch dữ liệu nhạy cảm PII (`customer_note`) gửi đối tác.
 - Phân tích chi tiết trace $T\text{-}002@55$ chỉ ra bản chất lỗi chìm (Silent Error) do xung đột thứ bậc giữa `model_override` và DB nội bộ.
 - Xây dựng 2 ca kiểm thử hành vi độc lập (Behavioral test ad-hoc) chứng minh tính bất biến của cổng phòng ngừa khi khách khai khống hoặc gửi thông tin cá nhân.
-- Phân tích cây lỗi (Fault tree) 3 nhánh chuẩn xác cho sự cố thẻ S4 (đêm 11.11 ticket gấp ba, nghẽn LLM, hàng chờ vỡ SLA 60 phút) trước và sau sửa; chỉ ra trade-off phát sinh khi tăng người trực giúp hết ùn nhưng kéo giảm ROI ngày thường từ 1.34 xuống 0.72.
+- Phân tích cây lỗi (Fault tree) 3 nhánh chuẩn xác cho sự cố thẻ S4 (đêm 11.11 ticket gấp ba, nghẽn LLM, hàng chờ vỡ SLA 60 phút) trước và sau sửa; chỉ ra trade-off phát sinh khi tăng người trực giúp hết ùn nhưng kéo giảm ROI ngày thường từ 1.24 (mốc prepared) xuống 0.72.
 - Tuân thủ nghiêm ngặt nguyên tắc nhóm: Không chạy lệnh eval trên máy cá nhân (mọi lần chạy chuẩn hóa trên máy trưởng nhóm Huy), không sửa tiêu chí đã ký, phối hợp chặt chẽ với các thành viên.
 
 ### Bằng chứng
 
 - Code cổng phòng ngừa: `lab10/guards.py`, `lab10/guards_round1.py`.
 - Các commit trên GitHub: `0246edc`, `3890a0e`, `dd6452a`, `e9f6b1c`, `4d0bec7`, `c9f54e5`.
-- Mã lần chạy trỏ tới: `R-base-before-20261119-143424-b45eeb` (base), `R-base-after-20261119-143751-a7034b`, `R-S4-before-20261119-170619-a42b10`, `R-S4-prepared-20261119-170619-a42b10`, `R-S4-after-20261119-171317-3de02d`.
+- Mã lần chạy trỏ tới: `R-base-before-20261119-154809-b45eeb` (base), `R-base-prepared-20261119-170437-a42b10` (prepared), `R-S4-before-20261119-170619-a42b10`, `R-S4-prepared-20261119-170619-a42b10`, `R-S4-after-20261119-171317-3de02d`.
 - Các mục đã điền hoàn chỉnh: Phiếu A (A2), Phiếu B (B0, B1, B2, B7.1–B7.3), Phiếu C (C0, C1, C5, C6, C9).
 
 ### Exit ticket
