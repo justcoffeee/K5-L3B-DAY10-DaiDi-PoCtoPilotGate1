@@ -19,13 +19,14 @@
     ],
     "alert_channel": "#ops-logix-alerts",
     "decision_note": true,
-    "review_sampling_pct": 0
+    "review_sampling_pct": 10
   },
   "legal": {
     "pii_fields_blocked_to_third_party": [
+      "name",
       "phone",
-      "address",
-      "customer_secret"
+      "street",
+      "customer_note"
     ],
     "carrier_fault_requires_recorded_cause": true
   }
