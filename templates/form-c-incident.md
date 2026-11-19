@@ -76,33 +76,33 @@ python3 -m lab10.trace --suite Sx --ticket <ID> --seed 11
 Ba loại lỗi: **giới hạn của hệ thống** · **lỗi ngữ cảnh** · **lỗi chìm** (cả người dùng lẫn hệ thống đều không nhận ra; nguy hiểm nhất,
 người chịu hại thường là bên thứ ba). Định nghĩa đầy đủ và ví dụ: Phiếu B mục B2.
 
-**Tác hại của thẻ:** cho ai `____` · đo bằng gì `____` · bao nhiêu ở mốc base `____`
+**Tác hại của thẻ:** cho ai `hãng và tài xế bị ghi oan, Finance (hoàn vượt ngân sách ngày sale), khách chờ duyệt quá hạn` · đo bằng gì `wrongful_carrier_faults, hoàn sai, tổng hoàn tự động so với ngân sách 300.000đ, số ca bị ùn` · bao nhiêu ở mốc base `27 lỗi ghi oan, hoàn sai ngày tệ nhất 44.000đ, tổng hoàn 466.000đ / 300.000đ, 4 ca ùn, chờ lâu nhất 78 phút` (`R-S4-before-20261119-170619-a42b10`)
 
 ### Phần 1 · Ghi lỗi (bằng chứng là mã ticket@seed và dòng trace, không tả chung chung)
 
 | # | Lỗi: người ta thấy gì (dán dòng trace / sổ cái) | Ai gặp, ai chịu | Hệ trọng (thấp / cao) | Loại lỗi (giới hạn hệ thống / ngữ cảnh / chìm) |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
+| 1 | `S4-08@11` mốc base: `04–05 llm_error 429 (policy_check)` → `06 llm_fallback mode fail_open` → `07 proposal basis fail_open, do_fault true` → `09 file_carrier_fault VNX, TX-VNX-02` dù `02 tracking cause MERCHANT_HANDOVER` (lỗi do shop bàn giao muộn) | Hãng VNX và tài xế TX-VNX-02 bị ghi lỗi oan; khách được hoàn đúng nên không ai trong luồng phát hiện | Cao | Lỗi chìm |
+| 2 | `S4-05@11` mốc base: `02 tracking db_delay_days 1, cause CARRIER` → `04–05 llm_error 429` → `06 llm_fallback fail_open` → `08 issue_refund 18.000đ` và `09 file_carrier_fault MKD, TX-MKD-06`; REFUND-v3 cần trễ từ 3 ngày | LogiX/Finance mất 18.000đ hoàn sai; hãng MKD bị ghi oan | Cao | Giới hạn hệ thống (LLM nghẽn, đường dự phòng cho qua) |
+| 3 | Report mốc prepared: `tổng hoàn tự động một ngày 422000đ (ngân sách 300000đ)`, `5 ca bị ùn`, `chờ lâu nhất 82 phút`; 15 ticket vỡ/thất lạc (ví dụ `S4-07@11`: `result escalated, DAMAGED`) dồn vào 1 người duyệt trong khoảng phút 240–298 | Finance (vượt ngân sách ngày sale), chị Hạnh (1 người, 6 ca/giờ), khách chờ quá 60 phút | Cao | Lỗi ngữ cảnh (cổng vòng 1 dùng trần ngày thường 2.000.000đ, không biết ngày sale chỉ 300.000đ) |
 
 ### Phần 2 · Tìm nguồn (đánh dấu câu nào đúng với từng lỗi)
 
 | Câu hỏi | Lỗi 1 | Lỗi 2 | Lỗi 3 |
 |---|---|---|---|
-| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | | | |
-| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | | | |
-| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | | | |
-| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | | | |
+| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | [ ] (khách không khai sai; lỗi nằm ở bước kiểm chính sách) | [ ] (khách chỉ nói "tới chậm tí") | [ ] |
+| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | [ ] (tracking đủ, ghi rõ `MERCHANT_HANDOVER`) | [ ] (tracking ghi rõ trễ 1 ngày) | [X] (cổng không đọc ngân sách riêng của ngày 11.11 trong `ops_limits`, chỉ dùng trần cố định trong config) |
+| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | [X] (đường dự phòng `fail_open` được quyền quyết thay cho kiểm chính sách) | [X] (như lỗi 1) | [X] (trần của bàn trong config và ngân sách Finance theo ngày cùng tồn tại, không rõ cái nào thắng) |
+| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | [X] (2 lần 429 liên tiếp → hệ thống rơi về trạng thái tiện lợi thay vì an toàn) | [X] (như lỗi 1) | [X] (ticket gấp ba + 1 người duyệt → hàng chờ quá SLA) |
 
 ### Phần 3 · Hướng xử lý (mỗi lỗi một ô)
 
 | | Lỗi 1 | Lỗi 2 | Lỗi 3 |
 |---|---|---|---|
-| Vì sao người gặp coi đây là lỗi | | | |
-| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | | | |
-| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | | | |
-| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | | | |
+| Vì sao người gặp coi đây là lỗi | Hãng bị phạt vì lỗi của shop; theo REFUND-v3, `MERCHANT_HANDOVER` không thuộc `fault_causes` | Finance mất tiền cho đơn chưa đủ điều kiện (trễ 1 ngày < 3 ngày) | Finance đã chốt 300.000đ cho ngày sale; khách chờ quá 60 phút đã thống nhất với Ops |
+| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | Khác: cổng code tính lại điều kiện ghi lỗi từ DB và chính sách hiệu lực, không phụ thuộc LLM (cổng vòng 1) | Khác: như lỗi 1, tính lại quyền lợi bằng `H.entitlement_vnd` | Trao quyền kiểm soát cho người: khoản vượt ngân sách ngày chuyển người duyệt; thêm người trực giờ cao điểm |
+| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | Cổng chặn `file_carrier_fault` → không ghi lỗi cho hãng → khách vẫn được hoàn đúng 24.000đ | Cổng chặn `issue_refund` → khách nhận trả lời từ chối → không ghi lỗi hãng | Khoản vượt ngân sách → `Verdict.escalate` → vào hàng chờ của 2 người trực → duyệt trong SLA → khách được trả lời |
+| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | `llm_fallback_rate` | `llm_fallback_rate` | `peak_hour_review_load` |
 
 Yêu cầu: ít nhất **hai lỗi có nguồn khác nhau** ở phần 2, và ít nhất một lỗi được xếp đúng là **lỗi chìm**.
 
@@ -315,9 +315,9 @@ python3 -m lab10.grade --incident Sx
 
 | Nhánh fault tree | Nguyên nhân | Chỗ sửa (hàm + nhánh trong `guards.py`, hoặc khoá trong `operating_gates.json`) | Tầng (phát hiện / chặn / giới hạn thiệt hại / vận hành) | GIẢM khả năng hay NGĂN hẳn? Vì sao | Mã lần chạy sau khi sửa |
 |---|---|---|---|---|---|
-| [1] | | | | | |
-| [2] | | | | | |
-| [3] | | | | | |
+| [1] Duyệt sai khi LLM nghẽn | `llm_fallback` chế độ `fail_open`: đề xuất hoàn và ghi lỗi hãng không qua kiểm chính sách | Cổng vòng 1 đã có: `write_gate` nhánh `issue_refund` (tính lại `H.entitlement_vnd` từ `db_delay_days` và `H.effective_policy`) và nhánh `file_carrier_fault` (`H.carrier_at_fault`). Vòng 2 không sửa thêm | Chặn | **Ngăn** hoàn sai và ghi oan: cổng tính lại từ DB và chính sách cho mọi lệnh ghi, không phụ thuộc LLM có trả lời hay không. Mốc prepared đã đưa 27 lỗi oan về 0 | `R-S4-prepared-20261119-170619-a42b10` |
+| [2] Hoàn tự động vượt ngân sách ngày sale | Cổng vòng 1 chỉ biết trần cố định 2.000.000đ trong config | `write_gate` nhánh `issue_refund`, khối mới đầu nhánh: lấy mức thấp hơn giữa `ctx.tools.ops_limits()["daily_auto_refund_budget_vnd"]` và `business.daily_refund_cap_vnd`; nếu `auto_refund_today_vnd() + amount_vnd` vượt thì `Verdict.escalate` | Chặn + giới hạn thiệt hại | **Ngăn** vượt ngân sách tự động (422.000đ → 292.000đ / 300.000đ); phần vượt vẫn được trả nếu người duyệt đồng ý | `R-S4-after-20261119-171208-dd74b1` |
+| [3] Hàng chờ quá SLA giờ cao điểm | 1 người duyệt 6 ca/giờ; giờ đông nhất có 16 ca vào hàng chờ | `operations.reviewers_on_shift` 1 → 2 và `operations.review_capacity_per_hour` 6 → 12 (phải đổi cả hai, code lấy mức nhỏ hơn) | Vận hành | **Giảm**: 6 ca ùn → 0, chờ lâu nhất 86 → 15 phút trên S4; nếu lượng việc vượt 12 ca/giờ vẫn có thể ùn. Đánh đổi: thêm 30.000đ phí trực, ROI S4 0,37 và ROI bộ nền 0,72 < 1,0 đã ký | `R-S4-after-20261119-171317-3de02d` |
 
 ---
 
@@ -330,14 +330,14 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 
 | | Chỉ số theo dõi mới của bàn |
 |---|---|
-| **Tên trong `MONITORS`** | |
-| **Bước / hành vi được đo** | |
-| **Thước đo** (một câu, có đơn vị) | |
-| **Dữ liệu** (trường nào của trial, không có nhãn) | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | |
-| **Khung thời gian / ngưỡng báo động** | |
-| **Điểm mù** (chỉ số này KHÔNG thấy gì) | |
-| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | |
+| **Tên trong `MONITORS`** | `llm_fallback_rate` (chính) · `peak_hour_review_load` (phụ) |
+| **Bước / hành vi được đo** | Bước kiểm chính sách bằng LLM: trợ lý có phải chạy tiếp bằng đường dự phòng khi LLM không trả lời không · (phụ) lượng ca vào hàng chờ người duyệt theo giờ |
+| **Thước đo** (một câu, có đơn vị) | Tỉ lệ ticket có ít nhất một sự kiện `llm_fallback` (% ticket) · (phụ) số ca vào hàng chờ trong giờ đông nhất (ca/giờ) |
+| **Dữ liệu** (trường nào của trial, không có nhãn) | `events[].type == "llm_fallback"` · (phụ) `review_kind`, `arrive_min`, `seed`, `day` |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Số trial có `llm_fallback` / tổng số trial; danh sách rỗng thì trả 0 (mẫu số tối thiểu 1) · (phụ) nhóm trial có `review_kind` theo (seed, day, giờ = `arrive_min` // 60), lấy nhóm lớn nhất; trial thiếu `arrive_min` không được đếm |
+| **Khung thời gian / ngưỡng báo động** | Cửa sổ trượt 60 phút: `llm_fallback_rate` > 5% thì báo `#ops-logix-alerts` và NV-TUNG cân nhắc tắt `issue_refund` tự động · (phụ) > 12 ca/giờ (công suất 2 người) thì gọi thêm người hoặc thu hẹp theo runbook Giờ cao điểm |
+| **Điểm mù** (chỉ số này KHÔNG thấy gì) | Không biết quyết định trên đường dự phòng đúng hay sai; không thấy LLM trả lời sai mà không báo lỗi · (phụ) không thấy thời gian xử lý thật của từng ca hay ca bị bỏ quên |
+| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | `llm_fallback_rate`: 0 · 0,185 · `peak_hour_review_load`: 1 · 16 (report `R-S4-grade-20261119-171318-3de02d`, `6 monitor ✅`) |
 
 ---
 
