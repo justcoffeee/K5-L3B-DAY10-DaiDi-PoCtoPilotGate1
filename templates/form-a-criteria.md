@@ -147,18 +147,17 @@ thì chúng tôi sẽ không chọn Tiếp tục; nếu sau một vòng sửa v�
 
 ## A5 · Ký và đẩy tiêu chí (phút 60–65)
 
-Soát lại `config/acceptance_criteria.json` lần cuối (tên bàn ở `team`, người ký ở `signed_by`, đủ ngưỡng, `decision_rule`,
-`stop_condition`), rồi chạy **trước khi chạy đánh giá lần nào**:
+Tiêu chí đã được ký và đẩy lên `origin main` trong commit `fea0eaa` (`Sign acceptance criteria`); thời điểm ký lấy từ `config/acceptance_criteria.lock`. Không ký lại.
 
-```bash
-python3 -m lab10.criteria sign
-git add config/acceptance_criteria.json config/acceptance_criteria.lock && git commit -m 'Sign acceptance criteria' && git push -u origin main
-```
+**⚠️ Lưu ý của nhóm:**
+
+- **KHÔNG ai chạy eval trên máy mình. Mọi lần chạy làm trên máy Huy.** Các thành viên dùng chung report, trace và mã lần chạy do Huy cung cấp để điền phiếu.
+- **KHÔNG sửa `config/acceptance_criteria.json`**, kể cả lưu lại bằng công cụ tự định dạng; giữ nguyên file khoá `config/acceptance_criteria.lock`.
 
 | Mục | Điền |
 |---|---|
-| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | |
-| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | |
-| Đã push lên `origin main` thành công? | có / chưa |
+| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | `2026-11-19T15:45:15` (theo file khoá) |
+| Mã commit `Sign acceptance criteria` (7 ký tự đầu) | `fea0eaa` |
+| Đã push lên `origin main` thành công? | Có — commit ký đã có trên `origin main`. |
 
 Sau bước này **không sửa** `config/acceptance_criteria.json`, kể cả mở rồi lưu lại bằng trình soạn thảo tự định dạng.
