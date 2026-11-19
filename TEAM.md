@@ -81,6 +81,9 @@ Vận hành và pháp lý. Phiếu A: câu 1.2 (mục tiêu của chị Oanh và
 ### Bằng chứng
 
 `templates/form-a-criteria.md` (A1 câu 1.2, A2 câu 1.4); `templates/form-b-evaluation-gates.md` (B4, B5, B7.5, B7.6); `templates/form-c-incident.md` (C4, C10, C11); `config/operating_gates.json` (operations/legal). Căn cứ vận hành: `data/world.json` (`NV-OANH`, `NV-HANH`, công suất 6 ca/giờ/người, SLA 60 phút, phí trực 30.000đ/người/ca) và `incidents/S4/card.md`. Bằng chứng S4 đã có trong Phiếu C: `R-S4-after-20261119-171317-3de02d`, `R-base-after-20261119-171318-3de02d`, grade `R-S4-grade-20261119-171318-3de02d`; các report ghi tải đỉnh, 0 ca ùn sau khi tăng lên 2 người, chi phí và ROI chưa đạt ngưỡng. Không có commit riêng cho các mục phiếu trong phần việc này; không nhận công việc chạy các mã lần chạy trên.
+- Commit của Nguyễn Mạnh Hùng (đăng tên `HungLunnn` do máy cá nhân chưa đặt danh tính Git theo MSSV): `3080b2e`, `da28df5`, `542fd2a`, `5e771d5`, `6af89de`, `b2d97a9`, `136beba`, `e3ea50f`, `760a0f7`, `ba72d4d`, `e539d9d`.
+
+**Dùng AI:** trưởng nhóm dùng Claude Code (trợ lý AI) để soát và chỉnh một số phần của tôi cho khớp report và config: Phiếu B mục B4, B5, B7.5, B7.6; Phiếu C mục C4, C11; hai khoá `legal.pii_fields_blocked_to_third_party` và `operations.review_sampling_pct` trong `config/operating_gates.json`. Tôi đã đọc lại các chỉnh sửa để giải thích được khi demo.
 
 ### Exit ticket
 
