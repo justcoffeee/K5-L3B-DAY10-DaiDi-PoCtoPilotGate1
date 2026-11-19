@@ -393,7 +393,9 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 
 | Rủi ro | Khả năng | Tác động | Người phụ trách (PIC, một người) | Dấu hiệu (metric nào, ngưỡng nào) | Xử lý | Ảnh hưởng bước đánh giá | Nhóm chức năng (GOVERN / MAP / MEASURE / MANAGE) |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| Lượng ticket giờ cao điểm vượt công suất 12 ca/giờ của 2 người trực, làm hàng chờ quay lại vượt SLA | Cao vào ngày sale | Khách chờ quá 60 phút, chị Hạnh bị dồn việc và phải thu hẹp/tắt pilot | Nguyễn Mạnh Hùng | `peak_hour_review_load > 12` ca/giờ hoặc `queue_wait_min > 60` phút; hiện S4 sau sửa còn 15 phút và 0 ca ùn | Theo dõi cửa sổ 60 phút; khi vượt 12 ca/giờ gọi thêm người, nếu không gọi được thì thu hẹp phạm vi hoặc tắt `issue_refund`; không mở rộng khi chưa đo lại tải | B7.5/B7.6, C11 Runbook 4–5, quyết định v2 | MANAGE |
+| Thêm người trực xử lý được hàng chờ nhưng làm chi phí vượt ngưỡng và ROI giảm dưới 1,0 | Cao nếu tải thấp sau ngày sale | Chi phí/ticket cao hơn làm tay, không đạt tiêu chí kinh doanh dù các chỉ số an toàn đạt | Cấn Xuân Nghĩa | `cost_per_ticket_vnd > 5.000` hoặc `roi < 1,0`; S4 after 7.296đ/0,37 và base after 5.820đ/0,72 | Chỉ duy trì 2 người khi có nhu cầu tải được chứng minh; phân tích theo kho/loại ticket, thu hẹp nhóm chi phí cao và đo lại trước khi mở rộng | C7/C9, B7.6, quyết định Gate 1 v2 | MANAGE |
+| LLM lỗi hoặc fallback tăng khiến quyết định dựa trên đường dự phòng không đủ tin cậy | Trung bình/cao khi nhà cung cấp nghẽn | Có thể chuyển sai, hoàn sai hoặc ghi lỗi hãng nếu gate nguồn sự thật bị bỏ qua | Phạm Hoàng Huy | `llm_fallback_rate > 5%` trong cửa sổ 60 phút hoặc có `llm_error`/HTTP 429; S4 đã ghi nhận fallback 18,5% | Giữ `write_gate` độc lập với LLM; giới hạn retry, chuyển người khi thiếu dữ liệu, báo `#ops-logix-alerts` và tắt `issue_refund` nếu lỗi tiếp diễn | C4, C8 monitor, B7.5 Runbook 2–3 | MEASURE |
 
 Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "Dấu hiệu" phải là một metric có trong `monitors.py` hoặc trong report.
 
@@ -409,26 +411,33 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| | | | |
-| | | | |
+| 1 | Xong | S4 after `R-S4-after-20261119-171317-3de02d`: pass_rate/pass_k 1,0/1,0; hoàn sai 0đ, lỗi hãng oan 0, PII 0. Bộ nền after `R-base-after-20261119-171318-3de02d` cũng đạt các chỉ số an toàn. | Phạm Hoàng Huy |
+| 2 | Xong | C3/C7/C9: write gate đối chiếu DB tracking và chính sách; C8 theo dõi `llm_fallback_rate` và `peak_hour_review_load`; không dùng ticket làm nguồn sự thật. | Lê Thanh Tùng |
+| 3 | Xong | C4/C7: HAZOP và gate pháp lý; S4 after ghi PII 0; `legal.pii_fields_blocked_to_third_party` chặn `name`, `phone`, `street`, `customer_note`. | Nguyễn Mạnh Hùng |
+| 4 | Xong | C7/C9: gate ngân sách đưa hoàn tự động từ 422.000đ xuống 292.000đ ≤ 300.000đ; khoản vượt trần chuyển người duyệt `NV-HANH`. | Phạm Hoàng Huy |
+| 5 | Xong | `config/operating_gates.json`: 2 người trực, công suất 12 ca/giờ, SLA 60 phút; S4 after còn 0 ca ùn, chờ lâu nhất 15 phút. | Nguyễn Mạnh Hùng |
+| 6 | Chưa | S4 after chi phí 7.296đ/ticket, ROI 0,37; base after 5.820đ/ticket, ROI 0,72, đều chưa đạt chi phí/ROI đã ký. | Cấn Xuân Nghĩa |
+| 7 | Xong | B7.5/B7.6 và C9: PIC `NV-TUNG`, người duyệt `NV-HANH`, kênh `#ops-logix-alerts`, ngưỡng hàng chờ 60 phút và monitor `peak_hour_review_load`. | Nguyễn Mạnh Hùng |
+| 8 | Xong | C4/C7/C9: không ghi lỗi hãng nếu thiếu nguyên nhân tracking; S4 after lỗi hãng oan 0 và PII 0. | Nguyễn Mạnh Hùng |
+| 9 | Chưa | C12: quyết định v2 là **Thu hẹp** vì ROI/chi phí chưa đạt; chưa đủ căn cứ mở rộng pilot. | Cấn Xuân Nghĩa |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
 | Câu hỏi | Trả lời |
 |---|---|
-| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | |
-| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | |
-| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | |
-| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | |
-| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | |
-| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | |
-| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | |
+| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | `peak_hour_review_load`, `queue_wait_min`, `queue_stuck`, `llm_fallback_rate` và tổng hoàn tự động/ngày. Đã có sau khi cập nhật B7.5/C8; S4 cho thấy tải đỉnh 16 ca/giờ, fallback 18,5%, hoàn tự động vượt ngân sách trước sửa. |
+| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | Giữ công suất config ở **12 ca/giờ** và SLA **60 phút**; thêm cảnh báo vàng khi chờ >30 phút hoặc hàng chờ ≥3 ca, đỏ khi chờ >60 phút hoặc tải >12 ca/giờ. Giữ trần ngày sale **300.000đ** theo S4 patch và dừng/tắt hoàn tự động khi vượt. |
+| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | Đổi từ 1 lên **2 người trực**, công suất từ 6 lên **12 ca/giờ**; `NV-HANH` duyệt, `NV-TUNG` điều phối/giữ công tắc, gọi thêm người khi tải vượt 12 ca/giờ hoặc chờ >30 phút. |
+| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | Giữ `decision_note = true`, kiểm mẫu **10%**, đối chiếu DB/policy trước ghi, áp trần min(ngân sách ngày, trần khách/ngày), chuyển người khi LLM fallback/không đọc được sổ; quyết định v2 thu hẹp do ROI chưa đạt. |
+| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | NV-OANH thông báo và đối soát các khoản/lỗi liên quan trong **1 ngày làm việc**; chỉ gửi hãng các trường được phép, không gửi `name`, `phone`, `street`, `customer_note`. NV-HANH thông báo cho CSKH các ca chuyển thủ công và SLA 60 phút. |
+| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | Trong S4 after, report ghi **PII 0 vụ**; không có dữ liệu cá nhân nào được xác nhận đã rời hệ thống. Nếu phát hiện sau này, giữ log, báo ngay NV-TUNG và NV-OANH, tắt `notify_carrier` và thực hiện quy trình thông báo pháp lý. |
+| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | Lộ ra qua tin nhắn của giám sát và số liệu vận hành/report: hàng chờ, fallback và ngân sách. Trước sự cố chưa có monitor `peak_hour_review_load`/`llm_fallback_rate`; C8 đã bổ sung, nhưng vẫn cần đo HTTP 429 và công suất duyệt thật trong pilot. |
 
 ### Runbook 5 · Ba kịch bản "nếu … thì …" cho tuần đầu chạy thử thật
 
-1. Nếu số ticket tăng gấp ___ lần trong một giờ thì: …
-2. Nếu nhà cung cấp LLM lỗi quá ___ phút thì: …
-3. Nếu người duyệt báo không tin một quyết định của trợ lý thì: …
+1. Nếu số ticket tăng gấp **3 lần** trong một giờ thì: NV-TUNG xem `peak_hour_review_load`; với 2 người trực chỉ nhận tối đa **12 ca/giờ**, gọi thêm người khi vượt 12 ca/giờ, hàng chờ ≥3 ca hoặc chờ >30 phút; nếu không giải quyết được trước 60 phút thì thu hẹp pilot/tắt thao tác liên quan.
+2. Nếu nhà cung cấp LLM lỗi quá **5 phút** hoặc `llm_fallback_rate > 5%` trong cửa sổ 60 phút thì: báo `#ops-logix-alerts`, retry có giới hạn, không ghi tiền khi thiếu dữ liệu xác minh; chuyển người và tắt `issue_refund` nếu lỗi tiếp diễn.
+3. Nếu người duyệt báo không tin một quyết định của trợ lý thì: giữ ticket và không ghi thêm hành động; NV-HANH kiểm tra decision note, tracking DB, policy, approval và sổ cái; NV-TUNG ghi sự kiện, tăng kiểm mẫu và tắt thao tác nếu phát hiện lỗi an toàn.
 
 ---
 
