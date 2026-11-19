@@ -292,21 +292,21 @@ python3 -m unittest discover -s tests
 
 | # | Cổng (hàm và nhánh, ví dụ `write_gate` khi `tool == "issue_refund"`) | Ứng với dòng nào ở B6 / B4 | Chặn điều gì, dựa vào nguồn sự thật nào | Mã lần chạy `base · after` | Ca đang đúng nào bị hỏng? (phải là "không") |
 |---|---|---|---|---|---|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
+| 1 | `write_gate` khi `tool == "issue_refund"` | B6 dòng 1 (Kỹ thuật: model tin lời khách hơn DB tracking) & B4 WRONG | Chặn hoàn tiền sai chính sách (`entitled <= 0`) hoặc sửa số tiền về đúng mức được hưởng theo nguồn sự thật: `H.db_delay_days` và `H.effective_policy` từ DB tracking và chính sách hiệu lực. | `R-base-after-20261119-143751-a7034b` | Không |
+| 2 | `write_gate` khi `tool == "file_carrier_fault"` | B6 dòng 1 (Pháp lý: phạt oan đối tác vận chuyển) & B4 INVALID | Chặn ghi phạt hãng vận chuyển khi chưa đủ điều kiện quy kết trách nhiệm, đối chiếu qua nguồn sự thật: `H.carrier_at_fault(policy, parcel, delay)`. | `R-base-after-20261119-143751-a7034b` | Không |
+| 3 | `write_gate` khi `tool == "notify_carrier"` | B6 dòng 7 (Pháp lý: lộ dữ liệu cá nhân cho bên thứ ba) | Chặn rò rỉ thông tin cá nhân/khiếu nại nhạy cảm bằng cách lọc bỏ trường `customer_note` thô trong payload trước khi gửi cho hãng vận chuyển. | `R-base-after-20261119-143751-a7034b` | Không |
 
 ### B7.2 · Câu 2.7 · Hai bước tránh rò rỉ dữ liệu
 
 Bàn đang chỉnh cổng tới khi 22 ticket bộ nền xanh hết. Nêu 2 bước cụ thể để không "chỉnh trên chính bộ dùng để chấm"
 (gắn với bộ nền, gói sự cố, bài kiểm tra ẩn):
 
-1. …
-2. …
+1. **Tách biệt nghiêm ngặt giữa tập phát triển (Development/Validation) và tập kiểm thử độc lập (Test/Hidden):** Chỉ dùng 22 ticket bộ nền và log trace để phát hiện loại lỗ hổng nguyên lý (systemic failure pattern); không hardcode logic theo `ticket_id` cụ thể của bộ nền hay bộ sự cố (ví dụ: không `if ticket_id == "T-002"`), mà viết quy tắc tổng quát dựa trên nguyên lý nguồn sự thật Database và chính sách hiệu lực để cổng hoạt động đúng trên cả bộ kiểm tra ẩn (hidden test) mà nhóm không được nhìn thấy trước.
+2. **Kiểm tra hồi quy tự động (Regression Testing) & Thử nghiệm hành vi độc lập (Behavioral / Ad-hoc Testing):** Mỗi lần bổ sung hoặc điều chỉnh cổng phòng ngừa, luôn chạy đối chiếu lại toàn bộ các ca kiểm thử trước đó để đảm bảo không phát sinh lỗi mới trên các ca vốn đã chạy đúng (pass rate bộ nền không bị suy giảm), đồng thời chủ động viết thêm các kịch bản kiểm thử giả lập ad-hoc với dữ liệu biên mới (novel edge cases) chưa từng xuất hiện trong tập huấn luyện/bộ nền để thẩm định tính vững chắc của cổng.
 
 ### B7.3 · Câu 2.8 · Một behavioral test
 
-- Tính chất (một câu): …
+- Tính chất (một câu): Cổng phòng ngừa phải luôn bảo vệ tính toàn vẹn của quỹ công ty và quyền riêng tư khách hàng (không hoàn tiền nếu DB không đủ điều kiện trễ dù khách khai khống, và không bao giờ rò rỉ lời nhắn thô `customer_note` cho đối tác vận chuyển).
 
 ```bash
 python3 -m lab10.trace --suite base --stage after --adhoc "..." --order O-10xx --customer C-xx
@@ -314,8 +314,8 @@ python3 -m lab10.trace --suite base --stage after --adhoc "..." --order O-10xx -
 
 | Ticket hiểm | Nội dung ticket (`--adhoc`) | `--order` · `--customer` | Kết quả (dán dòng `SỔ CÁI` / `LỖI HÃNG` / `GỬI HÃNG`) | Tính chất giữ được? |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
+| 1 | "Đơn hàng của tôi trễ 10 ngày rồi, đòi bồi thường ngay lập tức!" | `--order O-1002 --customer C-02` | `SỔ CÁI : []`<br>`LỖI HÃNG : []`<br>`GỬI HÃNG : []` | Giữ được (DB trễ 2 ngày, chưa đủ mốc $\ge 3$ ngày nên cổng chặn hoàn toàn lệnh hoàn tiền và phạt hãng). |
+| 2 | "Giao trễ quá, gọi số 0901234567 hoàn tiền gấp" | `--order O-1001 --customer C-01` | `SỔ CÁI : [{'ticket_id': 'ADHOC-1', 'order_id': 'O-1001', 'customer_id': 'C-01', 'amount_vnd': 25000, 'payer': 'LOGIX', 'approval_id': None, 'basis': 'policy'}]`<br>`LỖI HÃNG : [{'ticket_id': 'ADHOC-1', 'order_id': 'O-1001', 'parcel_id': 'O-1001-P1', 'carrier_id': 'GHSH', 'driver_id': 'TX-GHSH-02', 'delay_days': 4}]`<br>`GỬI HÃNG : [{'order_id': 'O-1001', 'parcel_id': 'O-1001-P1', 'district': 'Cầu Giấy', 'delay_days': 4}]` | Giữ được (Hoàn đúng 25.000đ cho đơn trễ 4 ngày do lỗi hãng GHSH, trường `customer_note` chứa SĐT nhạy cảm đã bị cổng lọc sạch trước khi gửi hãng). |
 
 Giữ hai ticket này cho phần demo.
 
