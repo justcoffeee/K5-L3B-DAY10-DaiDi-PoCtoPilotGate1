@@ -2,11 +2,11 @@
   "team": "",
   "members": [],
   "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "decision_v1": "Tiếp tục",
+  "decision_v2": "Thu hẹp",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: C5 nêu giả định LLM luôn sẵn sàng 100% và ticket phân bố đều để 1 người duyệt 6 ca/giờ giữ SLA 60 phút; S4 cho thấy llm_fallback_rate = 18,5%, giờ đông nhất 16 ca vào hàng chờ và prepared còn 5 ca ùn, chờ tối đa 82 phút, nên không được dựa vào các giả định đó để mở rộng.",
+    "reduce_or_prevent": "Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: Theo C7/C9, write_gate đối chiếu DB/chính sách NGĂN nhánh hoàn sai và ghi oan (44.000đ/27 lỗi về 0/0), cổng ngân sách NGĂN tổng hoàn tự động vượt trần ngày sale (422.000 xuống 292.000đ ≤ 300.000đ) khi mọi lệnh ghi qua cổng và nguồn dữ liệu/sổ đúng; thêm người từ 1 lên 2, công suất 6 lên 12 ca/giờ chỉ GIẢM nguy cơ ùn (sau cổng ngân sách: 6 xuống 0 ca, chờ 86 xuống 15 phút), không bảo đảm trước mọi tải và làm ROI S4 còn 0,37, bộ nền 0,72 < 1,0.",
+    "measure_in_pilot": "Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: Đo tỷ lệ HTTP 429/lỗi và fallback LLM thật theo cửa sổ 60 phút (so mốc S4 18,5%), phân bố ticket theo giờ/loại (so đỉnh 16 ca/giờ), thời gian duyệt thật mỗi ca và công suất mỗi người (mô phỏng 6 ca/giờ, kiểm lại có ghi chú 4 phút), tổng chi phí thật kể cả luồng thủ công bị cắt và phí trực (ngưỡng 5.000đ/ticket), ROI ≥ 1,0, ùn 0 ca và chờ ≤ 60 phút; đo riêng ngày thường/ngày sale của phạm vi thu hẹp trước khi xét mở rộng."
   }
 }

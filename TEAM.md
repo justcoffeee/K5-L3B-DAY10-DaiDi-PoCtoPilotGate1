@@ -28,7 +28,7 @@ Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi ti�
 
 ### Phần việc phụ trách
 
-Sản phẩm và kinh doanh; câu 2.3, Phiếu B mục B3: bản đồ dữ liệu và ví dụ drift chính sách REFUND-v3 → v4 từ 2026-12-01; câu 2.9, mục B7.4 và nhóm `business` trong `config/operating_gates.json`.
+Sản phẩm và kinh doanh; câu 2.3, Phiếu B mục B3: bản đồ dữ liệu và ví dụ drift chính sách REFUND-v3 → v4 từ 2026-12-01; câu 2.9, mục B7.4 và nhóm `business` trong `config/operating_gates.json`; quyết định v1 ở B8, v2 ở C12 và ba dòng bắt buộc trong bài nộp.
 
 ### Đóng góp cụ thể
 
@@ -36,7 +36,7 @@ Sản phẩm và kinh doanh; câu 2.3, Phiếu B mục B3: bản đồ dữ li�
 
 ### Bằng chứng
 
-`templates/form-b-evaluation-gates.md`, mục B3; căn cứ `data/world.json`, `lab10/agent.py`, `lab10/helpers.py` và `lab10/tools.py`. Đây là phân tích và đề xuất, không phải kết quả chạy mới.
+`templates/form-b-evaluation-gates.md`, mục B3, B7.4 và B8; `templates/form-c-incident.md`, mục C12; căn cứ `data/world.json`, `lab10/agent.py`, `lab10/helpers.py` và `lab10/tools.py`. Phần quyết định dùng kết quả Huy bàn giao: bộ nền prepared `R-base-prepared-20261119-170437-a42b10`, grade cuối `R-S4-grade-20261119-171318-3de02d` và các mốc ở C0; không chạy đo mới. Ghi rõ phương án thu hẹp chưa được đo, bảng `by_segment` cần Huy bổ sung; không hồi tố v1 bằng kết quả S4. Có dùng Codex hỗ trợ soạn và kiểm tra tính nhất quán giữa hai phiếu và ba dòng bắt buộc.
 
 ## LeThanhTung-2A202603819
 

@@ -31,7 +31,7 @@ Mọi con số trong quyết định Gate 1 phải trỏ về một dòng ở đ
 |---|---|---|---|---|---|---|---|---|
 | 1 | `R-base-before-20261119-154809-b45eeb` | base · base | (baseline, chưa có cổng) | 0.9909 [0.9727, 1.0] | 0.9545 | 20.000đ · 1 lỗi · 0 lộ | 0.2273 | Chưa đạt 2 chỉ số an toàn bắt buộc (hoàn sai và phạt oan hãng do lọt lỗi chìm T-002@55). |
 | 2 | | base · after | (cổng vòng 1, thử trước khi chốt) | | | | | |
-| 3 | | base · prepared | (cổng vòng 1 đã chốt) | | | | | |
+| 3 | `R-base-prepared-20261119-170437-a42b10` | base · prepared | cổng vòng 1 đã chốt, trước nhận thẻ; kết quả từ máy Huy | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 lỗi · 0 lộ | 0,2273 | Đạt cả 9 ngưỡng; chi phí 4.456đ, ROI 1,24, ùn 0; v1 chỉ đề nghị Tiếp tục có điều kiện do chưa có gói sự cố. |
 | 4 | | | | | | | | |
 
 ---
@@ -411,22 +411,24 @@ bao nhiêu thời gian? (3) Có phần nào của dự án không nên làm ti�
 
 | | **v1** (phút 105–115, TRƯỚC khi nhận thẻ sự cố) |
 |---|---|
-| Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | |
-| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | |
-| Mã lần chạy dùng làm bằng chứng | bộ nền, mốc base: ________ · bộ nền với cổng vòng 1 (prepared): ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Đọc khối "theo kho và hãng" ở cuối output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
-| Bằng chứng 2 | |
-| Bằng chứng 3 | |
-| Khớp dòng nào trong `decision_rule` đã ký? | |
-| Nếu Thu hẹp: cắt phần nào, vì sao | |
-| Nếu Cải tiến thêm: giả thuyết cụ thể + hạn | |
-| Nếu Dừng: bài học ghi lại | |
-| Một bằng chứng còn thiếu (thứ bộ nền chưa đo được) | |
-| Ngày quyết định lại (trừ khi Dừng) | |
-| PIC ký | |
+| Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | `fea0eaa`, ký lúc `2026-11-19T15:45:15`. |
+| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | `0a18b267`, theo `config/round1.lock`, chốt lúc `2026-11-19T17:04:29`. |
+| Mã lần chạy dùng làm bằng chứng | Bộ nền base `R-base-before-20261119-154809-b45eeb`; bộ nền prepared `R-base-prepared-20261119-170437-a42b10` (mốc sau chốt cổng, trước nhận thẻ). |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | Theo kết quả bộ nền prepared bàn giao: không; cả 9 ngưỡng đã ký đạt, gồm chi phí **4.456 ≤ 5.000đ/ticket**, ROI **1,24 ≥ 1,0**, **0 ca ùn**. Chỉ kết luận cho bộ nền, chưa có bằng chứng gói sự cố ở thời điểm v1. |
+| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Đọc khối "theo kho và hãng" ở cuối output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | B1 ghi baseline HCM pass_rate **0,96**, hoàn sai **20.000đ**, **1 lỗi oan**, VNX pass_rate **0,9714**; không dùng các số baseline để xếp hạng prepared. Chưa có `by_segment` prepared trong dữ liệu bàn giao cho Nghĩa, cần Huy bổ sung trước nộp; không tự suy ra mọi phân khúc đều đạt từ số tổng. Giữ đề nghị có điều kiện và chưa mở pilot thật khi bằng chứng phân khúc chưa đầy đủ. |
+| Quyết định (khoanh một) | **Tiếp tục có điều kiện** — thuộc lựa chọn **Tiếp tục**, chỉ là đề nghị ở vòng 1, chưa cho phép mở pilot thật khi chưa kiểm tra gói sự cố. |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | Bộ nền prepared `R-base-prepared-20261119-170437-a42b10` đạt pass_rate **1,0 ≥ 0,98**, pass_k **1,0 ≥ 0,95**; hoàn sai **0đ**, lỗi hãng oan **0**, PII **0**. So với baseline, khắc phục **20.000đ** hoàn sai và **1** lỗi oan. |
+| Bằng chứng 2 | Cùng bộ nền prepared: chuyển người **0,2273 ≤ 0,25**, số ca ùn **0**, đạt ngưỡng chuyển người và hàng chờ đã ký. |
+| Bằng chứng 3 | Cùng bộ nền prepared: chi phí **4.456đ/ticket ≤ 5.000đ**, ROI **1,24 ≥ 1,0**; đạt cả nhóm kinh doanh/vận hành, chưa dùng số sau sự cố để quyết định v1. |
+| Khớp dòng nào trong `decision_rule` đã ký? | Dòng **Tiếp tục**, phần “trước khi có bằng chứng gói sự cố chỉ là đề nghị có điều kiện ở vòng 1”; cần đạt cả bộ nền và gói sự cố khi được phát, không vượt trần, rồi mới xét mở thật. |
+| Nếu Thu hẹp: cắt phần nào, vì sao | Không chọn ở v1; chưa dùng thông tin từ S4 để cắt phạm vi hồi tố. |
+| Nếu Cải tiến thêm: giả thuyết cụ thể + hạn | Không chọn ở v1 vì bộ nền prepared đạt cả 9 ngưỡng. |
+| Nếu Dừng: bài học ghi lại | Không chọn ở v1. |
+| Một bằng chứng còn thiếu (thứ bộ nền chưa đo được) | Gói sự cố chưa phát: chưa kiểm tải dồn giờ cao điểm, LLM nghẽn kéo dài và ngân sách thay đổi; cần bằng chứng ngoài mock trước khi mở rộng. Bổ sung bảng phân khúc của report prepared từ máy Huy. |
+| Ngày quyết định lại (trừ khi Dừng) | **2026-11-26**; xem lại ngay khi nhận gói sự cố ở vòng 2, không chờ đến hạn nếu có tín hiệu đỏ. |
+| PIC ký | **Cấn Xuân Nghĩa — Sản phẩm và kinh doanh**, người ghi đề nghị quyết định; Huy giữ bằng chứng chạy, Hùng phối hợp chị Hạnh xác nhận khả năng vận hành. |
+
+**Ghi nhận thời điểm điền:** B8 được hoàn thiện cùng C12 sau khi nhận kết quả S4; nội dung v1 ở trên chỉ dùng bằng chứng bộ nền đã có trước sự cố, không ghi lùi thời điểm commit hay coi đề nghị có điều kiện là đã được cấp phép pilot. C12 phải giữ nguyên tên v1 là **“Tiếp tục có điều kiện”**, sau đó so với v2 **“Thu hẹp”**.
 
 Xong v1 thì lưu và đẩy một bản (sau mốc này không sửa cột v1):
 
