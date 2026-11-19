@@ -263,11 +263,16 @@ Bốn lăng kính (bắt buộc đủ cả bốn; dự án AI hay chết ở ba 
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được hôm nay? (trace / data / config nào) | Thành cổng phòng ngừa nào (code hay config) / hay vào risk register |
 |---|---|---|---|
-| | Kỹ thuật | | |
-| | Kinh doanh | | |
-| | Con người và vận hành | | |
-| | Pháp lý | | |
-| | | | |
+| **[CỔNG 1]** Trợ lý đã tin số ngày trễ khách tự khai hơn tracking DB, nên hoàn tiền cho đơn chưa đủ điều kiện và ghi lỗi cho hãng/tài xế dù DB không xác nhận | Kỹ thuật | Có: lần chạy base `R-base-before-20261119-154809-b45eeb`, trace `T-002@55` bước 03 `model_override` (db 2 → ticket 5), bước 06 `issue_refund` 20.000đ, bước 07 `file_carrier_fault` VNX | **Cổng code** `write_gate` trong `lab10/guards.py`: trước `issue_refund` tính lại quyền lợi từ `db_delay_days` và chính sách hiệu lực (`H.entitlement_vnd`), vượt thì sửa về đúng mức hoặc từ chối; trước `file_carrier_fault` chỉ cho qua khi `H.carrier_at_fault(...)` đúng |
+| Sau ngày 01/12 trợ lý vẫn áp REFUND-v3 vì cờ `index_active` chưa được cập nhật, nên hoàn tự động tới 200.000đ và ghi lỗi hãng cho ca `FORCE_MAJEURE` trái REFUND-v4 | Kỹ thuật | Có một phần: `data/world.json` → `policies` (v3 `index_active = true`, v4 `false`), `lab10/agent.py` dòng 135 chọn theo cờ; chưa có ticket sau 01/12 trong bộ nền | **Cổng code** `pre_guard`: ghim chính sách theo ngày bằng `H.effective_policy(policies, ctx.as_of)` thay vì theo cờ (gộp vào cổng 1) |
+| **[CỔNG 2]** Một ngày có nhiều khiếu nại cùng lúc, tổng hoàn tự động vượt ngân sách Finance mà không ai biết cho tới khi chị Oanh chốt sổ | Kinh doanh | Có: report base tổng hoàn tự động 155.000đ/ngày so với ngân sách 2.000.000đ (`ops_limits`); `config/operating_gates.json` → `daily_refund_cap_vnd` đang trống | **Cổng config** `business.daily_refund_cap_vnd` (và `cost_budget_per_ticket_vnd` theo trần LLM 1.500đ): vượt trần thì chuyển người duyệt |
+| Nhóm ticket thiếu thông tin kho tốn nhiều hơn làm tay, kéo chi phí bình quân lên và ROI xuống dưới mức đã ký | Kinh doanh | Có: report base, kho `?` 10.359đ/ticket (làm tay 10.000đ), 100% chuyển người, nhưng chỉ 5 lần chạy | Risk register: theo dõi chi phí theo kho; nếu tiếp tục cao thì thu hẹp `pilot_scope` khỏi nhóm này |
+| Nhân viên CSKH không tin trợ lý nên vẫn kiểm lại tay mọi quyết định, chị Hạnh bị dồn việc, tiết kiệm trên giấy không thành thật | Con người và vận hành | Có: report base "nhân viên kiểm lại 0% quyết định tự động"; `data/world.json` → `staff_behavior.trust_conditions` cần ghi chú quyết định, kiểm mẫu ≥ 10%, người duyệt NV-HANH | **Cổng config** `operations`: `approver_id = NV-HANH`, `decision_note = true`, `review_sampling_pct` theo mức tối thiểu; kèm `pic`, `max_queue_wait_minutes = 60` (Hùng điền) |
+| Giờ cao điểm lượng ca chuyển người gấp ba, một người trực không kịp, ca chờ quá 60 phút | Con người và vận hành | Có một phần: report base 5 ca/ngày, 0 ca ùn, 1 người trực, 6 ca/giờ; chưa thử giờ cao điểm | Risk register + runbook mục Giờ cao điểm (B7.6): ngưỡng thêm người trực hoặc thu hẹp phạm vi |
+| **[CỔNG 3]** Thông báo gửi hãng kèm nguyên văn lời khách, có lần chứa số điện thoại/địa chỉ, LogiX bị khiếu nại lộ dữ liệu cá nhân | Pháp lý | Có: trace `T-002@55` bước 08 `notify_carrier` gửi `customer_note` thô; chính sách chỉ cho gửi `order_id`, `parcel_id`, `district`, `delay_days` (`carrier_notice_fields`) | **Cổng code + config**: `write_gate` trước `notify_carrier` chỉ giữ các trường trong `carrier_notice_fields` (bỏ `customer_note`); `legal.pii_fields_blocked_to_third_party` (Hùng điền) |
+| Tài xế TX-VNX-03 bị ghi lỗi trễ 5 ngày mà không được hỏi, hãng phản đối và đòi bỏ phạt | Pháp lý | Có: trace `T-002@55` bước 07 ghi `driver_id: TX-VNX-03`, `delay_days: 5` trong khi DB trễ 2 ngày | **Cổng config** `legal.carrier_fault_requires_recorded_cause = true` (cùng cổng 1) |
+
+**Người dẫn:** Phạm Hoàng Huy. **Ba cổng chọn dựng hôm nay:** cổng 1 (đối chiếu DB và chính sách trước lệnh ghi, Tùng viết trong `guards.py`), cổng 2 (trần hoàn ngày và ngân sách LLM, Nghĩa điền `business`), cổng 3 (chặn dữ liệu cá nhân gửi hãng, Tùng viết + Hùng điền `legal`). Các dòng còn lại vào Risk register.
 
 ---
 
