@@ -9,8 +9,8 @@
   "operations": {
     "pic": "NV-TUNG",
     "approver_id": "NV-HANH",
-    "reviewers_on_shift": 1,
-    "review_capacity_per_hour": 6,
+    "reviewers_on_shift": 2,
+    "review_capacity_per_hour": 12,
     "max_queue_wait_minutes": 60,
     "stop_conditions": [
       "Phát sinh tiền hoàn sai > 0 VNĐ",
