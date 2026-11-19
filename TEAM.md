@@ -68,23 +68,24 @@ Kỹ sư cổng (vòng 1 & hỗ trợ vòng 2):
 - **Một điều học được:** Hiểu sâu sắc về cơ chế phòng thủ nhiều lớp (Defense in Depth) và tầm quan trọng sống còn của việc đặt cổng kiểm tra bằng code (Hard Gate) đối chiếu nguồn sự thật Database (Single Source of Truth) thay vì ngây thơ tin tưởng vào output hay prompt của LLM khi tích hợp vào quy trình tài chính - vận hành.
 - **Một điều còn chưa chắc:** Cách thiết kế cơ chế co giãn linh hoạt (Dynamic auto-scaling) tối ưu nhất cho nhân sự trực ca duyệt thủ công giữa các khung giờ bình thường và giờ siêu sale cao điểm để vừa không bao giờ vỡ SLA 60 phút, vừa giữ vững trần hiệu quả kinh tế (ROI ≥ 1.0).
 
-## HoVaTen-MSSV
+## NguyenManhHung-2A202603852
 
 ### Phần việc phụ trách
 
-Vai trong bàn; câu nào của đề, mục nào của phiếu A/B/C, file nào (`lab10/guards.py`, `config/operating_gates.json`, …).
+Vận hành và pháp lý. Phiếu A: câu 1.2 (mục tiêu của chị Oanh và chị Hạnh) và câu 1.4 (telemetry production). Phiếu B: câu 2.4, mục B4 HAZOP; B5 checklist 9 nhóm; câu 2.10, mục B7.5 runbook phần 1–3 và B7.6 giờ cao điểm. Phiếu C, thẻ S4: mục C4 HAZOP; C10 risk register; C11 checklist cập nhật và runbook phần 4–5. Cấu hình vận hành/pháp lý: `config/operating_gates.json` mục `operations` và `legal`.
 
 ### Đóng góp cụ thể
 
-...
+Điền mục tiêu của kế toán đối soát và trưởng ca CSKH dựa trên vai trò nhân sự, SLA và dữ liệu vận hành; thiết kế telemetry production không dựa vào nhãn, bao quát hoàn tiền sai, lỗi hãng oan, rò rỉ PII và hàng chờ quá SLA. Lập HAZOP với các nhánh kỹ thuật, vận hành, ngân sách và dữ liệu bên thứ ba; hoàn thiện checklist go-live với trạng thái, bằng chứng và PIC có tên. Điền runbook theo config hiện tại: 2 người trực, 12 ca/giờ, SLA 60 phút, kênh `#ops-logix-alerts`; bổ sung ngưỡng giờ cao điểm, cách thu hẹp/tắt thao tác và trách nhiệm xử lý. Sau thẻ S4, ghi rủi ro còn lại về tải đỉnh, chi phí/ROI và lỗi LLM; cập nhật checklist 9 nhóm cùng runbook ứng phó. Dùng Codex hỗ trợ đọc tài liệu, soạn và rà tính nhất quán; không tự chạy `eval` hay sửa tiêu chí đã ký.
 
 ### Bằng chứng
 
-Mã commit, mã lần chạy (`runs/<mã>`), dòng trong phiếu.
+`templates/form-a-criteria.md` (A1 câu 1.2, A2 câu 1.4); `templates/form-b-evaluation-gates.md` (B4, B5, B7.5, B7.6); `templates/form-c-incident.md` (C4, C10, C11); `config/operating_gates.json` (operations/legal). Căn cứ vận hành: `data/world.json` (`NV-OANH`, `NV-HANH`, công suất 6 ca/giờ/người, SLA 60 phút, phí trực 30.000đ/người/ca) và `incidents/S4/card.md`. Bằng chứng S4 đã có trong Phiếu C: `R-S4-after-20261119-171317-3de02d`, `R-base-after-20261119-171318-3de02d`, grade `R-S4-grade-20261119-171318-3de02d`; các report ghi tải đỉnh, 0 ca ùn sau khi tăng lên 2 người, chi phí và ROI chưa đạt ngưỡng. Không có commit riêng cho các mục phiếu trong phần việc này; không nhận công việc chạy các mã lần chạy trên.
 
 ### Exit ticket
 
-Một điều học được, một điều còn chưa chắc.
+- **Một điều học được:** runbook phải gắn ngưỡng với người có quyền hành động và bằng chứng quan sát được; tăng người trực có thể giảm hàng chờ nhưng đồng thời làm ROI giảm.
+- **Một điều còn chưa chắc:** cách bố trí nhân sự theo giờ và phạm vi ticket để giữ SLA 60 phút mà vẫn đạt ROI tối thiểu 1,0 trong ngày thường lẫn ngày sale.
 
 ## PhamHoangHuy-2A202603836
 
