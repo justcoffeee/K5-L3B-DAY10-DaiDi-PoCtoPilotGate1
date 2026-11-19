@@ -85,3 +85,35 @@ Mã commit, mã lần chạy (`runs/<mã>`), dòng trong phiếu.
 ### Exit ticket
 
 Một điều học được, một điều còn chưa chắc.
+
+## PhamHoangHuy-2A202603836
+
+### Phần việc phụ trách
+
+Trưởng nhóm; Kỹ sư cổng vòng 2 và người gom bài.
+- Thiết lập: tạo repo từ template, đặt danh tính Git, điền thông tin nhóm và chia vai trong `TEAM.md`.
+- Khối 1: chốt bộ ngưỡng mới cùng nhóm, điền `config/acceptance_criteria.json`, ký và push tiêu chí (commit `fea0eaa`, ký lúc 2026-11-19T15:45:15).
+- Khối 2: chạy mọi lần đo trên máy mình (để `runs/journal.jsonl` nằm một chỗ); dẫn pre-mortem Phiếu B mục B6; chốt cổng vòng 1 (`0a18b267`).
+- Vòng 2 (thẻ S4): nhận thẻ, sửa `lab10/guards.py` (cổng ngân sách hoàn tự động theo ngày), thêm 2 chỉ số trong `lab10/monitors.py`, đổi số người trực trong `config/operating_gates.json`; Phiếu C mục C2, C7, C8.
+- Gom bài: điền `submission/submission.json`, chạy `lab10.check_submission --collect`; soát phiếu của các bạn và sửa số liệu, mã lần chạy cho khớp report.
+
+### Đóng góp cụ thể
+
+- Cổng vòng 2 trong `write_gate` (nhánh `issue_refund`): lấy mức thấp hơn giữa ngân sách ngày trong `ops_limits` và trần config; vượt thì `Verdict.escalate`. Tổng hoàn tự động ngày sale 11.11 giảm từ 422.000đ xuống 292.000đ (ngân sách 300.000đ).
+- Hai chỉ số mới: `llm_fallback_rate` (bộ nền 0, thẻ S4 0,185) và `peak_hour_review_load` (bộ nền 1, thẻ S4 16 ca/giờ); report `6 monitor ✅`.
+- Thử ba phương án hàng chờ/ROI và đưa nhóm chọn: 2 người trực, 12 ca/giờ, giữ phạm vi. Kết quả trên S4: 0 ca ùn, chờ lâu nhất 15 phút; đổi lại ROI S4 0,37 và ROI bộ nền 0,72 (dưới 1,0 đã ký), là căn cứ cho quyết định v2 "Thu hẹp".
+- Trace thẻ S4 tìm hai kiểu lỗi ở mốc base: `S4-08@11` (LLM lỗi 429 → `fail_open` → ghi oan VNX dù lỗi do shop) và `S4-05@11` (hoàn 18.000đ cho đơn chỉ trễ 1 ngày); xác nhận cổng vòng 1 đã chặn cả hai.
+- Soát chéo và sửa: thay mã lần chạy của repo cũ, sửa số liệu C0/C1/C4/C9, B4/B5/B7.1/B7.5/B7.6, bổ sung kho/hãng xấu nhất ở B8 và C12.
+
+**Dùng AI:** dùng Claude Code (trợ lý AI) cho phần lớn phần việc trên: chạy lệnh đo, viết cổng ngân sách và hai chỉ số trong code, soạn B6, C2, C7, C8, soát và sửa số liệu trong các phiếu, điền `submission.json`, soạn mục cá nhân này. Ngưỡng tiêu chí và phương án 2 người trực là do nhóm chốt; tôi đã đọc lại code và kết quả để giải thích được khi demo.
+
+### Bằng chứng
+
+- Commit chính: `05ddecb` (TEAM.md), `d1a3fe6` + `fea0eaa` (ngưỡng và ký tiêu chí), `163f20c` (B6), `88ad4da` (config pháp lý, kiểm mẫu), `39a03a3` (chốt vòng 1), `bf632ba` (nhận thẻ S4), `99fff0b` (cổng ngân sách + chỉ số), `ca43525` (2 người trực), `5a45e88` (C2, C7, C8), `4cf33fb` (submission.json); các commit soát/sửa: `7bb1ffd`, `569b5e5`, `6e54572`, `350cc9d`, `332f8fc`, `84689a0`, `c55c190`, `06a95ab`, `259594a`.
+- Mã lần chạy: bộ nền base `R-base-before-20261119-154809-b45eeb`, prepared `R-base-prepared-20261119-170437-a42b10`, after `R-base-after-20261119-171318-3de02d`; S4 base `R-S4-before-20261119-170619-a42b10`, prepared `R-S4-prepared-20261119-170619-a42b10`, after `R-S4-after-20261119-171317-3de02d`; grade cuối `R-S4-grade-20261119-171318-3de02d`.
+- Phiếu: B6; C2, C7, C8.
+
+### Exit ticket
+
+- **Một điều học được:** cổng kiểm tra trước lệnh ghi phải tự tính lại từ DB và chính sách, không tin đề xuất của model; nhờ vậy cổng vòng 1 chặn được 27 lỗi ghi oan ở S4 dù LLM lỗi 60% và bàn không hề biết trước sự cố.
+- **Một điều còn chưa chắc:** làm sao bố trí người duyệt để vừa giữ SLA 60 phút giờ cao điểm vừa giữ ROI ≥ 1,0. Thêm người hết ùn nhưng ROI tụt xuống 0,37–0,72, còn lab chưa cho đo lịch trực theo giờ hay cắt theo loại ticket.
