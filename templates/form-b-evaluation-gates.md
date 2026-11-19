@@ -292,9 +292,9 @@ python3 -m unittest discover -s tests
 
 | # | Cổng (hàm và nhánh, ví dụ `write_gate` khi `tool == "issue_refund"`) | Ứng với dòng nào ở B6 / B4 | Chặn điều gì, dựa vào nguồn sự thật nào | Mã lần chạy `base · after` | Ca đang đúng nào bị hỏng? (phải là "không") |
 |---|---|---|---|---|---|
-| 1 | `write_gate` khi `tool == "issue_refund"` | B6 dòng 1 (Kỹ thuật: model tin lời khách hơn DB tracking) & B4 WRONG | Chặn hoàn tiền sai chính sách (`entitled <= 0`) hoặc sửa số tiền về đúng mức được hưởng theo nguồn sự thật: `H.db_delay_days` và `H.effective_policy` từ DB tracking và chính sách hiệu lực. | `R-base-after-20261119-143751-a7034b` | Không |
-| 2 | `write_gate` khi `tool == "file_carrier_fault"` | B6 dòng 1 (Pháp lý: phạt oan đối tác vận chuyển) & B4 INVALID | Chặn ghi phạt hãng vận chuyển khi chưa đủ điều kiện quy kết trách nhiệm, đối chiếu qua nguồn sự thật: `H.carrier_at_fault(policy, parcel, delay)`. | `R-base-after-20261119-143751-a7034b` | Không |
-| 3 | `write_gate` khi `tool == "notify_carrier"` | B6 dòng 7 (Pháp lý: lộ dữ liệu cá nhân cho bên thứ ba) | Chặn rò rỉ thông tin cá nhân/khiếu nại nhạy cảm bằng cách lọc bỏ trường `customer_note` thô trong payload trước khi gửi cho hãng vận chuyển. | `R-base-after-20261119-143751-a7034b` | Không |
+| 1 | `write_gate` khi `tool == "issue_refund"` | B6 dòng 1 (Kỹ thuật: model tin lời khách hơn DB tracking) & B4 WRONG | Chặn hoàn tiền sai chính sách (`entitled <= 0`) hoặc sửa số tiền về đúng mức được hưởng theo nguồn sự thật: `H.db_delay_days` và `H.effective_policy` từ DB tracking và chính sách hiệu lực. | `R-base-prepared-20261119-170437-a42b10` | Không |
+| 2 | `write_gate` khi `tool == "file_carrier_fault"` | B6 dòng 1 (Kỹ thuật) và dòng 8 (Pháp lý: tài xế bị ghi lỗi oan) & B4 INVALID | Chặn ghi phạt hãng vận chuyển khi chưa đủ điều kiện quy kết trách nhiệm, đối chiếu qua nguồn sự thật: `H.carrier_at_fault(policy, parcel, delay)`. | `R-base-prepared-20261119-170437-a42b10` | Không |
+| 3 | `write_gate` khi `tool == "notify_carrier"` | B6 dòng 7 (Pháp lý: lộ dữ liệu cá nhân cho bên thứ ba) | Chặn rò rỉ thông tin cá nhân/khiếu nại nhạy cảm bằng cách lọc bỏ trường `customer_note` thô trong payload trước khi gửi cho hãng vận chuyển. | `R-base-prepared-20261119-170437-a42b10` | Không |
 
 ### B7.2 · Câu 2.7 · Hai bước tránh rò rỉ dữ liệu
 
