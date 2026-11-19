@@ -30,11 +30,11 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `R-S4-before-20261119-170619-a42b10` | S4 · base | baseline của thẻ S4 (chưa có cổng nào) | 0.8195 [0.7707, 0.8683] | 0.4634 | 44.000đ · 27 lỗi · 0 lộ | 0.3659 | Bị hỏng nặng khi LLM nghẽn: 27 ca phạt oan hãng, hoàn sai 44k, tổng hoàn 466k vượt trần 300k, 4 ca ùn. |
-| 2 | `R-S4-prepared-20261119-170619-a42b10` | S4 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | 0.9854 [0.9659, 1.0] | 0.9268 | 0đ · 0 lỗi · 0 lộ | 0.3659 | Cổng vòng 1 bảo vệ tuyệt đối an toàn: triệt tiêu toàn bộ 27 lỗi hãng oan và 44k hoàn sai; nhưng vẫn còn 5 ca ùn và tổng hoàn 422k vượt ngân sách ngày sale. |
-| 3 | `R-S4-after-20261119-171208-dd74b1` | S4 · after | thêm cổng ngân sách hoàn tự động theo ngày (`ops_limits`) | 0.9854 [0.9659, 1.0] | 0.9268 | 0đ · 0 lỗi · 0 lộ | 0.4146 | Chặn thành công tổng hoàn tự động về mức an toàn 292.000đ ≤ 300.000đ; nhưng hàng chờ vẫn còn ca ùn do dồn việc giờ cao điểm. |
-| 4 | `R-S4-after-20261119-171317-3de02d` | S4 · after | tăng 2 người trực, công suất 12 ca/giờ cho giờ cao điểm | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.4146 | Xử lý triệt để toàn bộ sự cố S4: 0 ca ùn, chờ max 15 phút, pass rate 100%, ngân sách hoàn 292k đạt trần. |
-| 5 | `R-base-after-20261119-171317-3de02d` | base · after | (kiểm không regression trên bộ nền 22 ticket) | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.2273 | Đạt 100% không regression; chỉ số an toàn và SLA hoàn hảo (nhược điểm: ROI bộ nền giảm nhẹ từ 1.34 về 0.72 do tăng phí trực). |
+| 1 | `R-S4-before-20261119-170619-a42b10` | S4 · base | baseline của thẻ S4 (chưa có cổng nào) | 0.8683 [0.8, 0.9268] | 0.6829 | 44.000đ · 27 lỗi · 0 lộ | 0.3659 | Bị hỏng nặng khi LLM nghẽn: 27 ca phạt oan hãng, hoàn sai 44k, tổng hoàn 466k vượt trần 300k, 4 ca ùn. |
+| 2 | `R-S4-prepared-20261119-170619-a42b10` | S4 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.3659 | Cổng vòng 1 bảo vệ tuyệt đối an toàn: triệt tiêu toàn bộ 27 lỗi hãng oan và 44k hoàn sai; nhưng vẫn còn 5 ca ùn và tổng hoàn 422k vượt ngân sách ngày sale. |
+| 3 | `R-S4-after-20261119-171208-dd74b1` | S4 · after | thêm cổng ngân sách hoàn tự động theo ngày (`ops_limits`) | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.5122 | Tổng hoàn tự động về 292.000đ ≤ 300.000đ; nhưng các khoản vượt ngân sách chuyển người làm hàng chờ còn 6 ca ùn, chờ lâu nhất 86 phút, ROI 0,52. |
+| 4 | `R-S4-after-20261119-171317-3de02d` | S4 · after | tăng 2 người trực, công suất 12 ca/giờ cho giờ cao điểm | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.5122 | Hết ùn (0 ca, chờ lâu nhất 15 phút), ngân sách hoàn 292.000đ ≤ 300.000đ; nhưng chi phí 7.296đ/ticket và ROI 0,37 < 1,0 đã ký, report ghi không đủ căn cứ chọn Tiếp tục. |
+| 5 | `R-base-after-20261119-171318-3de02d` | base · after | (kiểm không regression trên bộ nền 22 ticket) | 1.0 [1.0, 1.0] | 1.0 | 0đ · 0 lỗi · 0 lộ | 0.2273 | Không có ca mới hỏng (pass_rate 1,0), an toàn và SLA đạt; nhưng thêm người trực làm chi phí bộ nền 4.456đ → 5.820đ (> 5.000đ đã ký) và ROI 1,24 → 0,72 (< 1,0 đã ký) so với mốc prepared. |
 
 ---
 
@@ -52,7 +52,7 @@ python3 -m lab10.grade --incident Sx
 - Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): 
   + **Đỡ được toàn bộ lỗi an toàn và pháp lý:** `wrongful_carrier_faults` giảm từ **27 lỗi oan về 0** (do cổng `file_carrier_fault` đối chiếu `H.carrier_at_fault` loại bỏ các ca lỗi do shop `MERCHANT_HANDOVER`).
   + **Đỡ được toàn bộ tiền hoàn sai:** `wrongful_refund_worst_day_vnd` giảm từ **44.000đ về 0đ** (cổng `issue_refund` đối chiếu `H.entitlement_vnd` từ DB và chính sách hiệu lực, ngăn chặn triệt để chế độ `fail_open` của LLM).
-  + `pass_rate` nâng từ **0.8195 lên 0.9854**, `pass_k` từ **0.4634 lên 0.9268**.
+  + `pass_rate` nâng từ **0.8683 lên 1.0**, `pass_k` từ **0.6829 lên 1.0**.
 - Khối kinh doanh và vận hành còn dòng nào vượt trần: 
   + **Vượt trần ngân sách ngày sale:** Tổng hoàn tiền tự động một ngày là **422.000đ** vượt ngân sách ngày sale **300.000đ** (`ops_limits.daily_auto_refund_budget_vnd`).
   + **Vượt trần vận hành (SLA):** Hàng chờ người duyệt phát sinh **5 ca bị ùn** (`queue_stuck = 5`), thời gian chờ tối đa lên tới **82 phút** (vượt trần SLA cam kết 60 phút).
