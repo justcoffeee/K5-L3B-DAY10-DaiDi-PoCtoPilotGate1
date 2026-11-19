@@ -24,8 +24,10 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+### Câu 1.2 · Mục tiêu nhìn từ hai người
+
+- **Chị Oanh, kế toán đối soát** (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Mọi dòng tiền bồi hoàn ghi nhận trên sổ cái (`refund_ledger`) và các quyết định quy lỗi hãng (`carrier_faults`) phải khớp tuyệt đối (sai lệch 0 đồng) với chứng từ đối soát, căn cứ tracking thực tế và điều khoản hợp đồng của hãng; không bao giờ để xảy ra việc hãng từ chối thanh toán đối soát vì phạt oan, hay shop khiếu nại vì bồi hoàn sai gây chênh lệch công nợ cuối tuần.
+- **Chị Hạnh, trưởng ca CSKH** (phải duyệt những ca trợ lý chuyển sang): Trợ lý chỉ chuyển ca (escalate) khi thực sự cần thiết (tỷ lệ chuyển ca ≤ 30%) và không bao giờ chuyển dồn dập vượt quá năng lực xử lý của ca trực (tối đa 6 ca/giờ/người, không để hàng chờ quá hạn SLA 60 phút); mọi ca chuyển sang đều phải đính kèm đầy đủ tóm tắt dữ kiện xác minh và dự thảo phương án giải quyết để người duyệt chỉ cần kiểm tra nhanh (dưới 4 phút/ca) thay vì phải tra cứu lại từ đầu.
 
 ---
 
@@ -48,20 +50,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
-
-**Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
-Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
-và `tracking.db_delay_days` trong `runs/<mã lần chạy>/traces/`, 22 ticket × 5 seed của bộ nền. Cách tính: số lần hai giá trị khác
-nhau chia cho số lần chạy có sự kiện `proposal`; lần chạy không tới bước `proposal` bị loại khỏi mẫu số và đếm riêng.
-Điểm mù: không thấy trường hợp chính tracking DB sai.
-
-*(Ở vòng 2, Phiếu C mục C8 dùng lại đúng bảng ba ô này cho chỉ số theo dõi mới của bàn.)*
+| **Bước / hành vi được đo** |  | Các hành động production có thể gây thiệt hại ra ngoài LogiX: tự động hoàn tiền, ghi/báo lỗi hãng, gửi dữ liệu ra ngoài và chuyển ca cho người duyệt. |
+| **Thước đo** (một câu, có đơn vị) |  | Trong mỗi cửa sổ theo dõi, **số ca vi phạm an toàn quan sát được** và **số ca chờ người duyệt quá 60 phút**, tính theo ca; các tín hiệu gồm hoàn tiền không có căn cứ/duyệt hợp lệ, lỗi hãng không có nguyên nhân khớp tracking, PII gửi sai phạm vi và hàng chờ quá SLA. |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) |  | Thu thập log production theo từng ticket: `events`, `ledger`, `faults`, `outbound`, `status`, `review_kind`, `queue_wait_min`, `queue_stuck`, `amount_vnd`, `day`, `warehouse`; đối chiếu định kỳ với policy/tracking DB, sổ hãng/shop và quyền duyệt. Không giả định production đã có webhook Portal: phản hồi/khiếu nại của hãng và shop phải được ghi nhận qua kênh đối soát chính thức khi phát sinh. Vận hành và pháp lý kiểm tra bất biến từ log; chị Oanh đối soát tiền và lỗi hãng. |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) |  | Với cửa sổ có `N` ticket, đếm riêng: `wrongful_refund_signal` (hoàn tiền không có policy/approval hợp lệ hoặc vượt hạn mức), `wrongful_fault_signal` (lỗi hãng không có nguyên nhân ghi nhận khớp tracking), `pii_signal` (outbound chứa PII không được phép) và `queue_stuck` (ca có `queue_wait_min > 60`). Tính thêm tỷ lệ mỗi tín hiệu trên số ticket có đủ trường dữ liệu cần thiết. Ticket thiếu log bắt buộc không được bỏ qua: đếm vào `telemetry_missing`, báo động chất lượng dữ liệu và chuyển người kiểm tra; báo cáo luôn cả `N` và số thiếu. |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Theo dõi hàng chờ bằng cửa sổ trượt **60 phút**; tổng hợp tiền, lỗi hãng và dữ liệu gửi ra ngoài theo ca **480 phút** và chốt ngày. Báo động ngay khi có **≥ 1** hoàn tiền sai, lỗi hãng oan hoặc PII; khi có **≥ 1** ca chờ quá 60 phút; khi tổng hoàn tự động/ngày vượt **2.000.000đ**; khi một khách vượt **300.000đ/ngày**; hoặc khi một hãng vượt **2 lỗi tự động/ngày**. Khi báo động, thông báo cho `NV-TUNG` để giữ công tắc, `NV-HANH` để duyệt và `NV-OANH` để đối soát; tạm ngắt hành động liên quan nếu vi phạm an toàn chưa được xác minh. |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) |  | Không thấy được thiệt hại chưa được ghi log, tracking/policy sai nhưng nhất quán trong log, tranh chấp khách/shop/hãng chưa phát sinh thành sự kiện, PII lộ qua kênh chưa được instrument, hoặc khiếu nại đến sau kỳ chốt; vẫn cần đối soát thủ công để kết luận cuối cùng. |
 
 ---
 
