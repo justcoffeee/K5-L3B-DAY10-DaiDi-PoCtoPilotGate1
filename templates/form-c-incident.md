@@ -231,13 +231,13 @@ Mở lại Phiếu B mục B3. Ghi ở đây những dòng đổi so với vòng
 
 *Mục riêng, không ghi đè HAZOP vòng 1 ở Phiếu B mục B4. Năm guideword và nghĩa của chúng: xem Phiếu B mục B4.*
 
-Tool chọn phân tích: `________________`
+Tool chọn phân tích: `issue_refund` (xét cả các phụ thuộc người duyệt, LLM và ngân sách)
 
 | Tham số / dòng dữ liệu | Guideword (WRONG / INVALID / INCOMPLETE / PERTURBED / INCAPABLE) | Lệch cụ thể (mã ticket, trường dữ liệu của thẻ) | Hậu quả, cho ai | Hiện có gì ngăn? | Gate đề xuất + tầng |
 |---|---|---|---|---|---|
-| | | | | | |
-| | | | | | |
-| | | | | | |
+| Hàng chờ người duyệt / `review_capacity_per_hour` | INCAPABLE | Một người duyệt chỉ xử lý được 6 ca/giờ nhưng thẻ sự cố làm số ca chuyển người vượt công suất; các ca sau phải chờ quá `max_queue_wait_minutes = 60`. | Khách chờ quá SLA, chị Hạnh không thể duyệt kịp, CSKH bị dồn việc và LogiX phải thu hẹp hoặc tắt pilot. | Đã có cổng giới hạn hàng chờ 60 phút, `reviewers_on_shift = 1` và báo về `#ops-logix-alerts`; chưa có khả năng tự bổ sung người khi cao điểm. | Nếu hàng chờ dự kiến vượt 6 ca/giờ hoặc có ca chờ quá 60 phút thì không tự hoàn; chuyển sang quy trình thủ công, gọi thêm người duyệt hoặc thu hẹp phạm vi pilot (cổng vận hành + runbook). PIC: Nguyễn Mạnh Hùng. |
+| LLM / lời gọi model | INCAPABLE | LLM trả lỗi `429` (quá tải hoặc vượt quota) đúng lúc cần trích xuất ticket hoặc tạo quyết định hoàn tiền. | Trợ lý có thể bỏ dở, trả lời không đầy đủ hoặc tiếp tục bằng dữ liệu thiếu; khách chờ và không được tự động hoàn tiền an toàn. | Guard phải coi lỗi gọi LLM là trạng thái không đủ dữ liệu; không được ghi `issue_refund` khi thiếu kết quả xác minh. | Bắt lỗi `429`, giới hạn retry có backoff và idempotency; sau số lần retry giới hạn thì chuyển người, không gọi tool ghi tiền và phát cảnh báo vận hành. PIC: Phạm Hoàng Huy. |
+| Ngân sách hoàn tự động / `max_auto_refund_per_customer_per_day_vnd` | INCAPABLE | Ngân sách 300.000đ cho khách/ngày đã hết nhưng ticket vẫn cần xử lý hoàn, hoặc hệ thống không kiểm tra được tổng đã hoàn do dữ liệu sổ cái chậm/không khả dụng. | Có nguy cơ vượt trần tài chính, hoàn trùng hoặc làm lệch đối soát; LogiX và chị Oanh chịu thiệt hại. | Có giới hạn 300.000đ/ngày và người duyệt `NV-HANH`, nhưng phải có sổ cái/đối chiếu còn hoạt động để kiểm tra trước khi ghi. | Khi tổng hoàn đã đạt hoặc không đọc được sổ cái thì chặn tự động, chuyển chị Hạnh duyệt và ghi rõ số dư ngân sách còn lại; báo `#ops-logix-alerts`. PIC: Cấn Xuân Nghĩa. |
 
 Bắt buộc: ít nhất ba dòng, trong đó **một dòng là nhánh bàn chưa thấy trên trace** lúc viết.
 
